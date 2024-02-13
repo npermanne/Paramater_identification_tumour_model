@@ -1,6 +1,7 @@
 from grid import Grid
 from cell import HealthyCell, CancerCell, OARCell, Cell
 from matplotlib import pyplot as plt
+from enum import Enum
 import numpy as np
 import random
 
@@ -19,12 +20,13 @@ DEFAULT_PARAMETERS = {
     "source_glucose_supply": 130,
     "source_oxygen_supply": 4500,
     "glucose_diffuse_rate": 0.2,
-    "oxygen_diffuse_rate": 0.2
+    "oxygen_diffuse_rate": 0.2,
+    "h_cells": 1000
 }
 
 
 class Simulation:
-    def __init__(self, x_size, y_size, params: dict, treatment_planning, h_cells):
+    def __init__(self, x_size, y_size, params: dict, treatment_planning=None):
         self.y_size = y_size
         self.x_size = x_size
 
@@ -51,8 +53,10 @@ class Simulation:
         self.glucose_diffuse_rate = params["glucose_diffuse_rate"]
         self.oxygen_diffuse_rate = params["oxygen_diffuse_rate"]
 
+        self.h_cells = params["h_cells"]
+
         self.treatment_planning = treatment_planning
-        self.h_cells = h_cells
+
 
         self.hours_passed = 0
 
@@ -111,7 +115,8 @@ class Simulation:
             self.grid.cycle_cells()
             self.grid.diffuse_glucose(self.glucose_diffuse_rate)
             self.grid.diffuse_oxygen(self.oxygen_diffuse_rate)
-            self.grid.irradiate(self.treatment_planning[self.hours_passed])
+            if self.treatment_planning is not None:
+                self.grid.irradiate(self.treatment_planning[self.hours_passed])
             self.hours_passed += 1
             if self.hours_passed % 24 == 0:
                 self.grid.compute_center()
@@ -138,12 +143,14 @@ def patch_type_color(patch):
 
 
 if __name__ == '__main__':
+    for i in DEFAULT_PARAMETERS.keys():
+        print(i)
     iterations = 1200
     STEP = 5
     a = np.zeros(24)
     a[23] = 0
     planning = np.tile(a, iterations // 24)
-    simu = Simulation(50, 50, DEFAULT_PARAMETERS, planning, 1000)
+    simu = Simulation(50, 50, DEFAULT_PARAMETERS, planning)
 
     plt.ion()
     fig, axis = plt.subplots(2, 2)
