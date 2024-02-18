@@ -93,7 +93,7 @@ class Grid:
                  quiescent_glucose_level,
                  cell_cycle,
                  radiosensitivities,
-                 oar=None):
+                 oar=None, verbose=False):
         """Constructor of the Grid.
 
         Parameters :
@@ -102,6 +102,8 @@ class Grid:
         sources : Number of nutrient sources on the grid
         oar : Optional description of an OAR zone on the grid
         """
+
+        self.verbose = verbose
 
         self.average_healthy_glucose_absorption = average_healthy_glucose_absorption
         self.average_cancer_glucose_absorption = average_cancer_glucose_absorption
@@ -299,7 +301,7 @@ class Grid:
                                 cell.age = 0
                     self.glucose[i, j] -= res[0]  # The local variables are updated according to the cell's consumption
                     self.oxygen[i, j] -= res[1]
-                    if (self.glucose[i, j] < 0) or (self.oxygen[i, j] < 0):
+                    if self.verbose and ((self.glucose[i, j] < 0) or (self.oxygen[i, j] < 0)):
                         print("Value smaller than 0")
                 count = len(self.cells[i, j])
                 self.cells[i, j].delete_dead()

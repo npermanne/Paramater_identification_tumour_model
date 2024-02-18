@@ -15,8 +15,15 @@ DEFAULT_PARAMETERS = {
     "quiescent_oxygen_level": 0.54 * 2 * 24,
     "critical_glucose_level": 0.36 * (3 / 4) * 24,
     "critical_oxygen_level": 0.54 * (3 / 4) * 24,
-    "cell_cycle": [11, 8, 4, 1],
-    "radiosensitivities": [1, .75, 1.25, 1.25, .75],
+    "cell_cycle_G1": 11,
+    "cell_cycle_S": 8,
+    "cell_cycle_G2": 4,
+    "cell_cycle_M": 1,
+    "radiosensitivity_G1": 1,
+    "radiosensitivity_S": .75,
+    "radiosensitivity_G2": 1.25,
+    "radiosensitivity_M": 1.25,
+    "radiosensitivity_G0": .75,
     "source_glucose_supply": 130,
     "source_oxygen_supply": 4500,
     "glucose_diffuse_rate": 0.2,
@@ -30,7 +37,7 @@ class Simulation:
         self.y_size = y_size
         self.x_size = x_size
 
-        self.sources = params["sources"]
+        self.sources = int(params["sources"])
 
         self.average_healthy_glucose_absorption = params["average_healthy_glucose_absorption"]
         self.average_cancer_glucose_absorption = params["average_cancer_glucose_absorption"]
@@ -44,8 +51,12 @@ class Simulation:
         self.critical_glucose_level = params["critical_glucose_level"]
         self.critical_oxygen_level = params["critical_oxygen_level"]
 
-        self.cell_cycle = params["cell_cycle"]
-        self.radiosensitivities = params["radiosensitivities"]
+        self.cell_cycle = [params["cell_cycle_G1"], params["cell_cycle_S"], params["cell_cycle_G2"],
+                           params["cell_cycle_M"]]
+
+        self.radiosensitivities = [params["radiosensitivity_G1"], params["radiosensitivity_S"],
+                                   params["radiosensitivity_G2"], params["radiosensitivity_M"],
+                                   params["radiosensitivity_G0"]]
 
         self.source_glucose_supply = params["source_glucose_supply"]
         self.source_oxygen_supply = params["source_oxygen_supply"]
@@ -57,9 +68,7 @@ class Simulation:
 
         self.treatment_planning = treatment_planning
 
-
         self.hours_passed = 0
-
         # Init grid
         self.grid = Grid(
             self.x_size,
@@ -121,9 +130,11 @@ class Simulation:
             if self.hours_passed % 24 == 0:
                 self.grid.compute_center()
 
-    def get_cells_type(self):
-        return [[patch_type_color(self.grid.cells[i][j]) for j in range(self.y_size)] for i in
-                range(self.x_size)]
+    def get_cells_type(self, color=True):
+        if color:
+            return [[patch_type_color(self.grid.cells[i][j]) for j in range(self.y_size)] for i in range(self.x_size)]
+        else:
+            return [[self.grid.cells[i][j].pixel_type() for j in range(self.y_size)] for i in range(self.x_size)]
 
     def get_cells_density(self):
         return [[len(self.grid.cells[i][j]) for j in range(self.y_size)] for i in range(self.x_size)]
