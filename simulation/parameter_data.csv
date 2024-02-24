@@ -1,0 +1,24 @@
+Parameter_name, Default Value, Minimum, Maximum
+sources, 100,
+average_healthy_glucose_absorption, .36,
+average_cancer_glucose_absorption, .54,
+average_healthy_oxygen_consumption, 20,
+average_cancer_oxygen_consumption, 20,
+quiescent_glucose_level, 0.36 * 2 * 24,
+quiescent_oxygen_level, 0.54 * 2 * 24,
+critical_glucose_level, 0.36 * (3 / 4) * 24,
+critical_oxygen_level, 0.54 * (3 / 4) * 24,
+cell_cycle_G1, 11,5,12
+cell_cycle_S, 8,8,10
+cell_cycle_G2, 4,2,4
+cell_cycle_M, 1,1,1
+radiosensitivity_G1, 1,
+radiosensitivity_S, .75,
+radiosensitivity_G2, 1.25,
+radiosensitivity_M, 1.25,
+radiosensitivity_G0, .75,
+source_glucose_supply, 130,
+source_oxygen_supply, 4500,
+glucose_diffuse_rate, 0.2,
+oxygen_diffuse_rate, 0.2,
+h_cells, 1000
