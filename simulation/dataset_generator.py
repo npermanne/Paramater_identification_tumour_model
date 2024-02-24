@@ -8,8 +8,8 @@ import time
 import os
 
 # PATH (should be the same that in networks/dataLoader.py
-DATASET_FOLDER_PATH = "dataset"
-DATASET_FOLDER_NAME = "{}_start={}_interval={}_ndraw={}"
+DATASET_FOLDER_PATH = "datasets"
+DATASET_FOLDER_NAME = "{}_start={}_interval={}_ndraw={}_size=({},{})"
 DATASET_FILE_NAME = "dataset.csv"
 DATA_NAME = "image{}_type={}_time={}.npy"
 CELLS_TYPES = "cells_types"
@@ -36,7 +36,8 @@ class DatasetGenerator:
         self.n_draw = n_draw
         self.parameters = parameters
         self.n_samples = n_samples
-        self.name = DATASET_FOLDER_NAME.format(name, self.start_draw, self.interval, self.n_draw)
+        self.name = DATASET_FOLDER_NAME.format(name, self.start_draw, self.interval, self.n_draw, self.img_size[0],
+                                               self.img_size[1])
 
     def generate_sample(self, parameter, color_type=True):
         sample = {}
@@ -95,10 +96,10 @@ if __name__ == '__main__':
         "quiescent_oxygen_level": np.full(n_samples, 0.54 * 2 * 24),
         "critical_glucose_level": np.full(n_samples, 0.36 * (3 / 4) * 24),
         "critical_oxygen_level": np.full(n_samples, 0.54 * (3 / 4) * 24),
-        "cell_cycle_G1": np.full(n_samples, 11),
-        "cell_cycle_S": np.full(n_samples, 8),
-        "cell_cycle_G2": np.full(n_samples, 4),
-        "cell_cycle_M": np.full(n_samples, 1),
+        "cell_cycle_G1": np.random.randint(5, 13, n_samples),
+        "cell_cycle_S": np.random.randint(8, 11, n_samples),
+        "cell_cycle_G2": np.random.randint(2, 5, n_samples),
+        "cell_cycle_M": np.random.randint(1, 3, n_samples),
         "radiosensitivity_G1": np.full(n_samples, 1),
         "radiosensitivity_S": np.full(n_samples, .75),
         "radiosensitivity_G2": np.full(n_samples, 1.25),
@@ -111,5 +112,5 @@ if __name__ == '__main__':
         "h_cells": np.full(n_samples, 1000)
     }
 
-    dataset_generator = DatasetGenerator((50, 50), 350, 100, 4, params, n_samples, "basic")
+    dataset_generator = DatasetGenerator((64, 64), 350, 100, 4, params, n_samples, "basic")
     dataset_generator.generate_dataset()
