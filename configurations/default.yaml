@@ -1,0 +1,26 @@
+---
+NAME: basic
+DATASET:
+  FOLDER_NAME: basic_start=350_interval=100_ndraw=4_size=(64,64)
+  N_DRAWS: 4
+  IMG_TYPES:
+    - cells_types
+    - cells_densities
+    - oxygen
+    - glucose
+  PARAMETERS_OF_INTEREST:
+    - cell_cycle_G1
+    - cell_cycle_S
+    - cell_cycle_G2
+    - cell_cycle_M
+
+MODEL:
+  INPUT_LSTM: 10
+  OUTPUT_LSTM: 10
+
+TRAINING:
+  LEARNING_RATE: 0.001
+  EPOCH: 5
+  BATCH_SIZE: 1
+  DEVICE: cpu
+
