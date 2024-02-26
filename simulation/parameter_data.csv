@@ -11,7 +11,7 @@ critical_oxygen_level, 0.54 * (3 / 4) * 24,
 cell_cycle_G1, 11,5,12
 cell_cycle_S, 8,8,10
 cell_cycle_G2, 4,2,4
-cell_cycle_M, 1,1,1
+cell_cycle_M, 1,1,2
 radiosensitivity_G1, 1,
 radiosensitivity_S, .75,
 radiosensitivity_G2, 1.25,

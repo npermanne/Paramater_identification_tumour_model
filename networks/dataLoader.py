@@ -14,9 +14,15 @@ CELLS_DENSITIES = "cells_densities"
 OXYGEN = "oxygen"
 GLUCOSE = "glucose"
 
+# TRAIN, VALIDATION, TEST SET PROPORTION (SHOULD ADD UP TO ONE)
+TRAIN_PROPORTION = 0.64
+VALIDATION_PROPORTION = 0.16
+TEST_PROPORTION = 0.2
+
 
 class SimulationDataset(Dataset):
-    def __init__(self, folderName, n_draw, parameters_of_interest, img_types=None):
+
+    def __init__(self, datasetType, folderName, n_draw, parameters_of_interest, img_types=None):
         if img_types is None:
             img_types = [CELLS_TYPES, CELLS_DENSITIES, OXYGEN, GLUCOSE]
         self.img_types = img_types
@@ -29,8 +35,23 @@ class SimulationDataset(Dataset):
         self.general_path = os.path.join(DATASET_FOLDER_PATH, folderName)
         self.dataframe = pd.read_csv(os.path.join(self.general_path, DATASET_FILE_NAME))
 
+        a = int(self.dataframe.shape[0] * 0.64)
+        b = int(self.dataframe.shape[0] * (0.64 + 0.16))
+
+        if datasetType == "train":
+            self.start = 0  # Inclusive
+            self.end = int(self.dataframe.shape[0] * 0.64)  # Exclusive
+        elif datasetType == "val":
+            self.start = int(self.dataframe.shape[0] * 0.64)  # Inclusive
+            self.end = int(self.dataframe.shape[0] * (0.64 + 0.16))  # Exclusive
+        elif datasetType == "test":
+            self.start = int(self.dataframe.shape[0] * (0.64 + 0.16))  # Inclusive
+            self.end = self.dataframe.shape[0]  # Exclusive
+        else:
+            raise Exception("Not a valid datasetType")
+
     def __len__(self):
-        return self.dataframe.shape[0]
+        return self.end - self.start
 
     def get_height(self):
         return self.height
@@ -39,6 +60,7 @@ class SimulationDataset(Dataset):
         return self.width
 
     def __getitem__(self, idx):
+        idx = self.start + idx
         inputs = np.zeros((self.n_draw, len(self.img_types), self.height, self.width), dtype=np.float32)
         for draw in range(self.n_draw):
             for index_type in range(len(self.img_types)):
@@ -46,7 +68,7 @@ class SimulationDataset(Dataset):
                     os.path.join(self.general_path,
                                  DATA_NAME.format(idx, self.img_types[index_type], self.sequence_times[draw])))
 
-        outputs = np.zeros((len(self.parameters_of_interest)),dtype=np.float32)
+        outputs = np.zeros((len(self.parameters_of_interest)), dtype=np.float32)
         i = 0
         for parameter in self.parameters_of_interest:
             outputs[i] = self.dataframe.loc[idx][parameter]
@@ -56,5 +78,5 @@ class SimulationDataset(Dataset):
 
 
 if __name__ == '__main__':
-    s = SimulationDataset("basic_start=350_interval=100_ndraw=4", 4, ["cell_cycle_G1"])
-    print(s[4])
+    s = SimulationDataset("train", "basic_start=350_interval=100_ndraw=4_size=(64,64)", 4, ["cell_cycle_G1"])
+    print(s[3])

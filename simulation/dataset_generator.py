@@ -85,7 +85,7 @@ class DatasetGenerator:
 
 
 if __name__ == '__main__':
-    n_samples = 5
+    n_samples = 500
     params = {
         "sources": np.full(n_samples, 100, dtype=int),
         "average_healthy_glucose_absorption": np.full(n_samples, .36),

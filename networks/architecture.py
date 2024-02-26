@@ -79,7 +79,7 @@ class Net(nn.Module):
         # (Batch Size, n_draws, input_LSTM)
         x, (h, c) = self.lstm(x)
         # (Batch Size, n_draws, output_LSTM)
-        x = x.view(self.batch_size, self.n_draws * self.output_LSTM)
+        x = x.reshape(self.batch_size, self.n_draws * self.output_LSTM)
         # (Batch Size, n_draws * output_LSTM)
         x = F.relu(self.linear2(x))
         # (Batch Size, n_params)
