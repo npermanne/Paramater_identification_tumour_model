@@ -1,6 +1,7 @@
 from simulation import Simulation
 from simulation import DEFAULT_PARAMETERS
 from enum import Enum
+from multiprocessing import Pool
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
@@ -83,6 +84,43 @@ class DatasetGenerator:
                                                                                (self.n_samples - index - 1) * np.mean(
                                                                                    times)), end='\r')
 
+    def generate_dataset_multi_process(self, process_number: int, chunksize: int):
+        general_path = os.path.join(DATASET_FOLDER_PATH, self.name)
+        if not os.path.exists(general_path):
+            os.makedirs(general_path)
+
+        df = pd.DataFrame(self.parameters)
+        df.to_csv(os.path.join(general_path, DATASET_FILE_NAME), index=True)
+
+        global generate
+
+        def generate(i):
+            row = df.iloc[i]
+            sample = self.generate_sample(row, color_type=False)
+            for t, draw in sample.items():
+                for type, matrix in draw.items():
+                    path = os.path.join(general_path, DATA_NAME.format(i, type, t))
+                    np.save(path, matrix)
+            print(f"Sample {i} done !")
+
+        pool = Pool(process_number)
+        pool.map(generate, range(df.shape[0]))
+
+    def generate_missing(self):
+        general_path = os.path.join(DATASET_FOLDER_PATH, self.name)
+        df = pd.read_csv(os.path.join(general_path, DATASET_FILE_NAME))
+
+        def generate(i):
+            row = df.iloc[i]
+            sample = self.generate_sample(row, color_type=False)
+            for t, draw in sample.items():
+                for type, matrix in draw.items():
+                    path = os.path.join(general_path, DATA_NAME.format(i, type, t))
+                    np.save(path, matrix)
+            print(f"Sample {i} done !")
+
+        generate(384)
+
 
 if __name__ == '__main__':
     n_samples = 500
@@ -96,10 +134,7 @@ if __name__ == '__main__':
         "quiescent_oxygen_level": np.full(n_samples, 0.54 * 2 * 24),
         "critical_glucose_level": np.full(n_samples, 0.36 * (3 / 4) * 24),
         "critical_oxygen_level": np.full(n_samples, 0.54 * (3 / 4) * 24),
-        "cell_cycle_G1": np.random.randint(5, 13, n_samples),
-        "cell_cycle_S": np.random.randint(8, 11, n_samples),
-        "cell_cycle_G2": np.random.randint(2, 5, n_samples),
-        "cell_cycle_M": np.random.randint(1, 3, n_samples),
+        "cell_cycle": np.random.randint(12, 72, n_samples),
         "radiosensitivity_G1": np.full(n_samples, 1),
         "radiosensitivity_S": np.full(n_samples, .75),
         "radiosensitivity_G2": np.full(n_samples, 1.25),
@@ -112,5 +147,6 @@ if __name__ == '__main__':
         "h_cells": np.full(n_samples, 1000)
     }
 
-    dataset_generator = DatasetGenerator((64, 64), 350, 100, 4, params, n_samples, "basic")
-    dataset_generator.generate_dataset()
+    dataset_generator = DatasetGenerator((64, 64), 350, 100, 4, params, n_samples, "basic_multiprocess")
+    dataset_generator.generate_dataset_multi_process(12, 1)
+    # dataset_generator.generate_missing()

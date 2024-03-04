@@ -1,7 +1,7 @@
 ---
-NAME: basic
+NAME: basic_multi_process
 DATASET:
-  FOLDER_NAME: basic_start=350_interval=100_ndraw=4_size=(64,64)
+  FOLDER_NAME: basic_multiprocess_start=350_interval=100_ndraw=4_size=(64,64)
   N_DRAWS: 4
   IMG_TYPES:
     - cells_types
@@ -9,10 +9,7 @@ DATASET:
     - oxygen
     - glucose
   PARAMETERS_OF_INTEREST:
-    - cell_cycle_G1
-    - cell_cycle_S
-    - cell_cycle_G2
-    - cell_cycle_M
+    - cell_cycle
 
 MODEL:
   INPUT_LSTM: 100

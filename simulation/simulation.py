@@ -51,7 +51,15 @@ class Simulation:
         self.critical_glucose_level = params["critical_glucose_level"]
         self.critical_oxygen_level = params["critical_oxygen_level"]
 
-        self.cell_cycle = [params["cell_cycle_G1"], params["cell_cycle_S"], params["cell_cycle_G2"],
+        if "cell_cycle" in params.keys():
+            total_cell_cycles = params["cell_cycle"]
+            G1 = int(total_cell_cycles * (11/24)) if int(total_cell_cycles * (11/24)) > 0 else 1
+            S = int(total_cell_cycles * (8/24)) if int(total_cell_cycles * (11/24)) > 0 else 1
+            G2 = int(total_cell_cycles * (4/24)) if int(total_cell_cycles * (11/24)) > 0 else 1
+            M = int(total_cell_cycles-G1-S-G2) if int(total_cell_cycles-G1-S-G2) > 0 else 1
+            self.cell_cycle = [G1, S, G2, M]
+        else:
+            self.cell_cycle = [params["cell_cycle_G1"], params["cell_cycle_S"], params["cell_cycle_G2"],
                            params["cell_cycle_M"]]
 
         self.radiosensitivities = [params["radiosensitivity_G1"], params["radiosensitivity_S"],
