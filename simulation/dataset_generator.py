@@ -30,12 +30,14 @@ class DatasetGenerator:
     parameters: dictionary of parameters
     """
 
-    def __init__(self, img_size, start_draw, interval, n_draw, parameters, n_samples, name):
+    def __init__(self, img_size, start_draw, interval, n_draw, parameter_data_file, parameters_of_interest, n_samples,
+                 name):
         self.img_size = img_size
         self.start_draw = start_draw
         self.interval = interval
         self.n_draw = n_draw
-        self.parameters = parameters
+        self.parameter_data = pd.read_csv(parameter_data_file, index_col=0)
+        self.parameters_of_interest = parameters_of_interest
         self.n_samples = n_samples
         self.name = DATASET_FOLDER_NAME.format(name, self.start_draw, self.interval, self.n_draw, self.img_size[0],
                                                self.img_size[1])
@@ -61,12 +63,27 @@ class DatasetGenerator:
                 plt.imshow(matrix)
                 plt.savefig(path, bbox_inches='tight')
 
+    def generate_parameters(self):
+        parameters = {}
+        for nameRow, row in self.parameter_data.iterrows():
+            if nameRow not in self.parameters_of_interest:
+                if row["Type"] == "int":
+                    parameters[nameRow] = np.full(self.n_samples, int(row["Default Value"]))
+                else:
+                    parameters[nameRow] = np.full(self.n_samples, float(row["Default Value"]))
+            else:
+                if row["Type"] == "int":
+                    parameters[nameRow] = np.random.randint(low=int(row["Minimum"]), high=int(row["Maximum"])+1, size=self.n_samples)
+                else:
+                    parameters[nameRow] = np.random.uniform(low=float(row["Minimum"]), high=float(row["Maximum"]), size=self.n_samples)
+        return parameters
+
     def generate_dataset(self):
         general_path = os.path.join(DATASET_FOLDER_PATH, self.name)
         if not os.path.exists(general_path):
             os.makedirs(general_path)
 
-        df = pd.DataFrame(self.parameters)
+        df = pd.DataFrame(self.generate_parameters())
         df.to_csv(os.path.join(general_path, DATASET_FILE_NAME), index=True)
 
         times = []
@@ -89,7 +106,7 @@ class DatasetGenerator:
         if not os.path.exists(general_path):
             os.makedirs(general_path)
 
-        df = pd.DataFrame(self.parameters)
+        df = pd.DataFrame(self.generate_parameters())
         df.to_csv(os.path.join(general_path, DATASET_FILE_NAME), index=True)
 
         global generate
@@ -123,30 +140,11 @@ class DatasetGenerator:
 
 
 if __name__ == '__main__':
-    n_samples = 500
-    params = {
-        "sources": np.full(n_samples, 100, dtype=int),
-        "average_healthy_glucose_absorption": np.full(n_samples, .36),
-        "average_cancer_glucose_absorption": np.full(n_samples, .54),
-        "average_healthy_oxygen_consumption": np.full(n_samples, 20),
-        "average_cancer_oxygen_consumption": np.full(n_samples, 20),
-        "quiescent_glucose_level": np.full(n_samples, 0.36 * 2 * 24),
-        "quiescent_oxygen_level": np.full(n_samples, 0.54 * 2 * 24),
-        "critical_glucose_level": np.full(n_samples, 0.36 * (3 / 4) * 24),
-        "critical_oxygen_level": np.full(n_samples, 0.54 * (3 / 4) * 24),
-        "cell_cycle": np.random.randint(12, 72, n_samples),
-        "radiosensitivity_G1": np.full(n_samples, 1),
-        "radiosensitivity_S": np.full(n_samples, .75),
-        "radiosensitivity_G2": np.full(n_samples, 1.25),
-        "radiosensitivity_M": np.full(n_samples, 1.25),
-        "radiosensitivity_G0": np.full(n_samples, .75),
-        "source_glucose_supply": np.full(n_samples, 130),
-        "source_oxygen_supply": np.full(n_samples, 4500),
-        "glucose_diffuse_rate": np.full(n_samples, 0.2),
-        "oxygen_diffuse_rate": np.full(n_samples, 0.2),
-        "h_cells": np.full(n_samples, 1000)
-    }
+    parameter_data_file = os.path.join("simulation", "parameter_data.csv")
+    dataset_generator = DatasetGenerator((64, 64), 350, 100, 8, parameter_data_file, [], 100,
+                                         "same_value_study")
 
-    dataset_generator = DatasetGenerator((64, 64), 350, 100, 4, params, n_samples, "basic_multiprocess")
+    # print(dataset_generator.generate_parameters())
     dataset_generator.generate_dataset_multi_process(12, 1)
     # dataset_generator.generate_missing()
+

@@ -7,6 +7,10 @@ average_cancer_oxygen_consumption, 20,,,float
 quiescent_multiplier,2,,,float
 critical_multiplier,0.75,,,float
 cell_cycle,24,12,36,int
+cell_cycle_G1, 11,5,12,int
+cell_cycle_S, 8,8,10,int
+cell_cycle_G2, 4,2,4,int
+cell_cycle_M, 1,1,2,int
 radiosensitivity_G1, 1,,,float
 radiosensitivity_S, .75,,,float
 radiosensitivity_G2, 1.25,,,float
