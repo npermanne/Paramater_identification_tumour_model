@@ -11,14 +11,13 @@ DEFAULT_PARAMETERS = {
     "average_cancer_glucose_absorption": .54,
     "average_healthy_oxygen_consumption": 20,
     "average_cancer_oxygen_consumption": 20,
-    "quiescent_glucose_level": 0.36 * 2 * 24,
-    "quiescent_oxygen_level": 0.54 * 2 * 24,
-    "critical_glucose_level": 0.36 * (3 / 4) * 24,
-    "critical_oxygen_level": 0.54 * (3 / 4) * 24,
+    "quiescent_multiplier": 2,
+    "critical_multiplier": (3 / 4),
     "cell_cycle_G1": 11,
     "cell_cycle_S": 8,
     "cell_cycle_G2": 4,
     "cell_cycle_M": 1,
+    "cell_cycle": 24,
     "radiosensitivity_G1": 1,
     "radiosensitivity_S": .75,
     "radiosensitivity_G2": 1.25,
@@ -45,26 +44,30 @@ class Simulation:
         self.average_healthy_oxygen_consumption = params["average_healthy_oxygen_consumption"]
         self.average_cancer_oxygen_consumption = params["average_cancer_oxygen_consumption"]
 
-        self.quiescent_glucose_level = params["quiescent_glucose_level"]
-        self.quiescent_oxygen_level = params["quiescent_oxygen_level"]
-
-        self.critical_glucose_level = params["critical_glucose_level"]
-        self.critical_oxygen_level = params["critical_oxygen_level"]
-
         if "cell_cycle" in params.keys():
             total_cell_cycles = params["cell_cycle"]
-            G1 = int(total_cell_cycles * (11/24)) if int(total_cell_cycles * (11/24)) > 0 else 1
-            S = int(total_cell_cycles * (8/24)) if int(total_cell_cycles * (11/24)) > 0 else 1
-            G2 = int(total_cell_cycles * (4/24)) if int(total_cell_cycles * (11/24)) > 0 else 1
-            M = int(total_cell_cycles-G1-S-G2) if int(total_cell_cycles-G1-S-G2) > 0 else 1
+            G1 = int(total_cell_cycles * (11 / 24)) if int(total_cell_cycles * (11 / 24)) > 0 else 1
+            S = int(total_cell_cycles * (8 / 24)) if int(total_cell_cycles * (11 / 24)) > 0 else 1
+            G2 = int(total_cell_cycles * (4 / 24)) if int(total_cell_cycles * (11 / 24)) > 0 else 1
+            M = int(total_cell_cycles - G1 - S - G2) if int(total_cell_cycles - G1 - S - G2) > 0 else 1
             self.cell_cycle = [G1, S, G2, M]
         else:
             self.cell_cycle = [params["cell_cycle_G1"], params["cell_cycle_S"], params["cell_cycle_G2"],
-                           params["cell_cycle_M"]]
+                               params["cell_cycle_M"]]
 
         self.radiosensitivities = [params["radiosensitivity_G1"], params["radiosensitivity_S"],
                                    params["radiosensitivity_G2"], params["radiosensitivity_M"],
                                    params["radiosensitivity_G0"]]
+
+        self.quiescent_glucose_level = self.average_healthy_glucose_absorption * params["quiescent_multiplier"] * sum(
+            self.cell_cycle)
+        self.quiescent_oxygen_level = self.average_healthy_oxygen_consumption * params["quiescent_multiplier"] * sum(
+            self.cell_cycle)
+
+        self.critical_glucose_level = self.average_healthy_glucose_absorption * params["critical_multiplier"] * sum(
+            self.cell_cycle)
+        self.critical_oxygen_level = self.average_healthy_oxygen_consumption * params["critical_multiplier"] * sum(
+            self.cell_cycle)
 
         self.source_glucose_supply = params["source_glucose_supply"]
         self.source_oxygen_supply = params["source_oxygen_supply"]
