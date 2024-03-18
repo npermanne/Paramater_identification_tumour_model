@@ -1,7 +1,7 @@
 ---
-NAME: basic_multi_process
+NAME: basic_multiprocess_corrected
 DATASET:
-  FOLDER_NAME: basic_multiprocess_start=350_interval=100_ndraw=4_size=(64,64)
+  FOLDER_NAME: basic_corrected_start=350_interval=100_ndraw=8_size=(64,64)
   N_DRAWS: 4
   IMG_TYPES:
     - cells_types
@@ -12,11 +12,11 @@ DATASET:
     - cell_cycle
 
 MODEL:
-  INPUT_LSTM: 100
-  OUTPUT_LSTM: 100
+  INPUT_LSTM: 1000
+  OUTPUT_LSTM: 1000
 
 TRAINING:
-  LEARNING_RATE: 0.001
+  LEARNING_RATE: 0.0001
   EPOCH: 50
   BATCH_SIZE: 10
   DEVICE: cpu
