@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 import torch
 import torch.nn as nn
 import os
+import pandas as pd
 
 # Random Seed
 np.random.seed(2990)
@@ -43,7 +44,8 @@ class Network:
             os.makedirs(folder_path)
 
         self.path_weight = os.path.join(folder_path, "weight.pkl")
-        self.path_graph = os.path.join(folder_path, "performance.png")
+        self.path_performance_curve = os.path.join(folder_path, "performance_curve.png")
+        self.path_test_data = os.path.join(folder_path, "test_data.csv")
 
         # LOAD DATASET
         self.train_dataset = SimulationDataset("train", param["DATASET"]["FOLDER_NAME"],
@@ -93,10 +95,10 @@ class Network:
             # TRAINING
             running_loss = 0
             for iter_train, data in enumerate(self.train_dataloader):
-                inputs, outputs = data
+                inputs, outputs, outputs_scaled = data
                 # Forward Pass
                 predicted = self.network.forward(inputs)
-                loss = self.criterion(predicted, outputs)
+                loss = self.criterion(predicted, outputs_scaled)
 
                 # Backpropagation
                 self.optimizer.zero_grad()
@@ -112,11 +114,11 @@ class Network:
             running_validation_loss = 0
             with torch.no_grad():
                 for iter_val, data in enumerate(self.val_dataloader):
-                    validation_inputs, validation_outputs = data
+                    validation_inputs, validation_outputs, validation_outputs_scaled = data
 
                     # Forward Pass
                     predicted = self.network.forward(validation_inputs)
-                    validation_loss = self.criterion(predicted, validation_outputs)
+                    validation_loss = self.criterion(predicted, validation_outputs_scaled)
 
                     # Validation Loss data
                     running_validation_loss += validation_loss.item()
@@ -133,7 +135,7 @@ class Network:
         plt.xlabel("Epoch")
         plt.ylabel("Loss")
         plt.legend()
-        plt.savefig(self.path_graph)
+        plt.savefig(self.path_performance_curve)
 
     ###############################
     # EVALUATION
@@ -145,18 +147,23 @@ class Network:
         # EVALUATION LOOP
         differences = None
         for iter_test, data in enumerate(self.test_dataloader):
-            test_inputs, test_outputs = data
+            test_inputs, test_outputs, test_outputs_scaled = data
 
             # Forward Pass
             predicted = self.network.forward(test_inputs)
 
             # Compute individual differences
             if differences is None:
-                differences = np.absolute((test_outputs.numpy() - predicted.detach().numpy()))
+                differences = np.absolute((test_outputs_scaled.numpy() - predicted.detach().numpy()))
             else:
                 differences = np.concatenate(
-                    (differences, np.absolute((test_outputs.numpy() - predicted.detach().numpy()))), axis=0)
+                    (differences, np.absolute((test_outputs_scaled.numpy() - predicted.detach().numpy()))), axis=0)
 
-        means = np.mean(differences, axis=0)
-        mean_difference_per_param = {self.parameter_of_interest[i]: means[i] for i in range(len(means))}
-        print("Average error per parameter: {}".format(mean_difference_per_param))
+        data = {
+            "Parameters": self.parameter_of_interest,
+            "Means": np.mean(differences, axis=0),
+            "Standard Deviation": np.std(differences, axis=0)
+        }
+
+        df = pd.DataFrame(data)
+        df.to_csv(self.path_test_data, index=False)

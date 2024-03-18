@@ -8,6 +8,7 @@ import numpy as np
 DATASET_FOLDER_PATH = "datasets"
 DATASET_FOLDER_NAME = "{}_start={}_interval={}_ndraw={}_size=({},{})"
 DATASET_FILE_NAME = "dataset.csv"
+PARAMETER_DATA = os.path.join("simulation", "parameter_data.csv")
 DATA_NAME = "image{}_type={}_time={}.npy"
 CELLS_TYPES = "cells_types"
 CELLS_DENSITIES = "cells_densities"
@@ -18,6 +19,10 @@ GLUCOSE = "glucose"
 TRAIN_PROPORTION = 0.64
 VALIDATION_PROPORTION = 0.16
 TEST_PROPORTION = 0.2
+
+# NORMALISATION PARAMETER
+LOW_VALUE = 0
+HIGH_VALUE = 1
 
 
 class SimulationDataset(Dataset):
@@ -34,9 +39,7 @@ class SimulationDataset(Dataset):
         self.sequence_times = list(range(int(s), int(s) + int(d) * int(i), int(i)))[:n_draw]
         self.general_path = os.path.join(DATASET_FOLDER_PATH, folderName)
         self.dataframe = pd.read_csv(os.path.join(self.general_path, DATASET_FILE_NAME))
-
-        a = int(self.dataframe.shape[0] * 0.64)
-        b = int(self.dataframe.shape[0] * (0.64 + 0.16))
+        self.parameter_data = pd.read_csv(PARAMETER_DATA, index_col=0)
 
         if datasetType == "train":
             self.start = 0  # Inclusive
@@ -69,14 +72,23 @@ class SimulationDataset(Dataset):
                                  DATA_NAME.format(idx, self.img_types[index_type], self.sequence_times[draw])))
 
         outputs = np.zeros((len(self.parameters_of_interest)), dtype=np.float32)
+        outputsScaled = np.zeros((len(self.parameters_of_interest)), dtype=np.float32)
         i = 0
         for parameter in self.parameters_of_interest:
-            outputs[i] = self.dataframe.loc[idx][parameter]
+            min_parameter = self.parameter_data.at[parameter, "Minimum"]
+            max_parameter = self.parameter_data.at[parameter, "Maximum"]
+            param_val = self.dataframe.loc[idx][parameter]
+            outputs[i] = param_val
+            outputsScaled[i] = (HIGH_VALUE - LOW_VALUE) * (param_val - min_parameter) / (
+                        max_parameter - min_parameter) + LOW_VALUE
+
             i += 1
 
-        return inputs, outputs
+        return inputs, outputs, outputsScaled
 
 
 if __name__ == '__main__':
-    s = SimulationDataset("train", "basic_start=350_interval=100_ndraw=4_size=(64,64)", 4, ["cell_cycle_G1"])
-    print(s[3])
+    s = SimulationDataset("train", "basic_corrected_start=350_interval=100_ndraw=8_size=(64,64)", 4, ["cell_cycle"])
+    a, b, c = s[3]
+    print(b)
+    print(c)
