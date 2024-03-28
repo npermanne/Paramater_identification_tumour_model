@@ -23,12 +23,39 @@ RESULTS_FOLDER = "results"
 ######################################################################################
 
 class Network:
-    # --------------------------------------------------------------------------------
-    # INITIALISATION OF THE MODEL
-    # INPUTS:
-    #     - param (dic): dictionary containing the parameters defined in the
-    #                    configuration (yaml) file
-    # --------------------------------------------------------------------------------
+    """
+    A class that describe the instantiation, the training and the evaluation of the model
+
+    Parameters:
+        param (dict): the parameters of the dataset, the model and the training
+
+    Attributes:
+        img_types (list): List containing all the image types that we want to use
+        n_draws (int): Number of draws
+        parameter_of_interest (list): List of parameters of interest that we want to predict
+        batch_size (int): Batch size
+        epochs (int): Number of epochs
+        name (string): Name of the configuration, will be used for the result folder
+        path_weight (string): Path to the weights of the model
+        path_performance_curve (string): Path to the performance curve of the training
+        path_test_data (string): Path to the result for each parameter
+        train_dataset (SimulationDataset): Training dataset
+        val_dataset (SimulationDataset): Validation dataset
+        test_dataset (SimulationDataset): Testing dataset
+        train_dataloader (DataLoader): Training dataloader
+        val_dataloader (DataLoader): Validation dataloader
+        test_dataloader (DataLoader): Testing dataloader
+        param_architecture (dict): Parameters of the architecture
+        network (Net): Instance of the architecture
+        optimizer (Optimizer): Optimizer (Adams)
+        criterion (Loss): Loss function
+
+    Methods:
+        load_weights(): Load the weights if any are present
+        train(): Train the model and save the weight
+        evaluate(): Evaluate the model
+
+    """
     def __init__(self, param):
         # USEFUL VARIABLES
         self.img_types = param["DATASET"]["IMG_TYPES"]
@@ -76,15 +103,9 @@ class Network:
         self.optimizer = torch.optim.Adam(self.network.parameters())
         self.criterion = nn.MSELoss()
 
-    ###############################
-    # LOAD WEIGHTS
-    ###############################
     def load_weights(self):
         self.network.load_state_dict(torch.load(self.path_weight))
 
-    ###############################
-    # TRAINING LOOP
-    ###############################
     def train(self):
         validation_losses = np.zeros(self.epochs)
         losses = np.zeros(self.epochs)
@@ -138,9 +159,6 @@ class Network:
         plt.legend()
         plt.savefig(self.path_performance_curve)
 
-    ###############################
-    # EVALUATION
-    ###############################
     def evaluate(self):
         self.network.train(False)
         self.network.eval()
