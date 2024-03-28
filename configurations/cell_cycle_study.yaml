@@ -1,7 +1,7 @@
 ---
-NAME: basic_multiprocess_corrected
+NAME: cell_cycle_study
 DATASET:
-  FOLDER_NAME: basic_corrected_start=350_interval=100_ndraw=8_size=(64,64)
+  FOLDER_NAME: cell_cycle_study_start=350_interval=100_ndraw=8_size=(64,64)
   N_DRAWS: 4
   IMG_TYPES:
     - cells_types
@@ -14,6 +14,7 @@ DATASET:
 MODEL:
   INPUT_LSTM: 1000
   OUTPUT_LSTM: 1000
+  LSTM_LAYER: 1
 
 TRAINING:
   LEARNING_RATE: 0.0001

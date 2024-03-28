@@ -67,7 +67,8 @@ class Network:
             "BATCH_SIZE": self.batch_size,
             "HEIGHT": self.train_dataset.get_height(),
             "WIDTH": self.train_dataset.get_width(),
-            "N_PARAMS": len(param["DATASET"]["PARAMETERS_OF_INTEREST"])
+            "N_PARAMS": len(param["DATASET"]["PARAMETERS_OF_INTEREST"]),
+            "LSTM_LAYERS": param["MODEL"]["LSTM_LAYER"]
         }
         self.network = Net(self.param_architecture).to(param["TRAINING"]["DEVICE"])
 

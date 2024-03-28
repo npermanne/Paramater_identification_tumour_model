@@ -17,6 +17,7 @@ class Net(nn.Module):
         self.n_types = param["N_TYPES"]
         self.input_LSTM = param["INPUT_LSTM"]
         self.output_LSTM = param["OUTPUT_LSTM"]
+        self.lstm_layers = param["LSTM_LAYERS"]
         self.batch_size = param["BATCH_SIZE"]
         self.height = param["HEIGHT"]
         self.width = param["WIDTH"]
@@ -46,7 +47,7 @@ class Net(nn.Module):
         # LSTM
 
         # size: input_LSTM
-        self.lstm = nn.LSTM(self.input_LSTM, self.output_LSTM, batch_first=True)
+        self.lstm = nn.LSTM(self.input_LSTM, self.output_LSTM, batch_first=True, num_layers=self.lstm_layers)
         # size: output_LSTM
 
         # --------------------------------------------------------------------------------------
@@ -83,5 +84,4 @@ class Net(nn.Module):
         # (Batch Size, n_draws * output_LSTM)
         x = F.sigmoid(self.linear2(x))
         # (Batch Size, n_params)
-
         return x
