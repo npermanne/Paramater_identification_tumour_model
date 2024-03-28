@@ -26,6 +26,33 @@ HIGH_VALUE = 1
 
 
 class SimulationDataset(Dataset):
+    """
+    Custom dataset loader that inherits from torch.utils.data.Dataset
+
+    Parameters:
+        datasetType (string): Type of dataset (train, val or test)
+        folderName (string): Name of the folder where the dataset is stored
+        n_draw (int): Number of draws
+        parameters_of_interest (list): List of parameters of interest that we want to predict
+        img_types (list): List containing all the image types that we want to use
+
+    Attributes:
+        img_types (list): List containing all the image types that we want to use
+        n_draw (int): Number of draws
+        parameters_of_interest (list): List of parameters of interest that we want to predict
+        height (int): height of the image
+        width (int): width of the images
+        sequence_times (list): List of times corresponding to the different images
+        general_path (string): Path to the dataset
+        dataframe (Dataframe): Dataframe containing all the sample and their respective parameters
+        parameter_data (Dataframe): Dataframe containing the parameter and their range
+
+    Methods:
+        __len__(): Return the number of sample in this dataset
+        get_height(): Return the height of the image in the sample
+        get_width(): Return the width of the image in the sample
+        __getitem__(idx): Return the input, the output and the output scaled of the model
+    """
 
     def __init__(self, datasetType, folderName, n_draw, parameters_of_interest, img_types=None):
         if img_types is None:
