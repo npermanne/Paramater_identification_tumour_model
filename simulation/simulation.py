@@ -32,6 +32,46 @@ DEFAULT_PARAMETERS = {
 
 
 class Simulation:
+    """
+    A class implementing the tumour simulation based on cell.py and grid.py
+
+    Parameters:
+        x_size (int): the size of the grid along the x-axis.
+        y_size (int): the size of the grid along the y-axis.
+        params (dict): the initial biological parameters for the simulation.
+        treatment_planning (list): the fraction of doses delivered at each time.
+
+    Attributes:
+        x_size (int): the size of the grid along the x-axis.
+        y_size (int): the size of the grid along the y-axis.
+        sources (int): Number of glucose and oxygen sources in the simulation.
+        average_healthy_glucose_absorption (float): Average glucose absorption rate for healthy cells.
+        average_cancer_glucose_absorption (float): Average glucose absorption rate for cancer cells.
+        average_healthy_oxygen_consumption (float): Average oxygen consumption rate for healthy cells.
+        average_cancer_oxygen_consumption (float): Average oxygen consumption rate for cancer cells.
+        cell_cycle (list): List containing durations of cell cycle stages.
+        radiosensitivities (list): List containing radiosensitivities of cell cycle stages.
+        quiescent_glucose_level (float): Glucose level for quiescent stage.
+        quiescent_oxygen_level (float): Oxygen level for quiescent stage.
+        critical_glucose_level (float): Critical glucose level before the cell's death.
+        critical_oxygen_level (float): Critical oxygen level before the cell's death.
+        source_glucose_supply (float): Glucose supply rate from sources.
+        source_oxygen_supply (float): Oxygen supply rate from sources.
+        glucose_diffuse_rate (float): Rate of glucose diffusion.
+        oxygen_diffuse_rate (float): Rate of oxygen diffusion.
+        h_cells (int): Number of initial healthy cells.
+        treatment_planning (list or None): List containing treatment planning information.
+        hours_passed (int): Hours passed in the simulation.
+        grid (Grid): Grid object representing the simulation environment.
+
+    Methods:
+        cycle(steps=1): cycle 'steps' hours through the simulation
+        get_cells_type(color=True): return a matrix containing the type of cells for each pixel
+        get_cells_density(): return a matrix containing the densities of cells for each pixel
+        get_glucose(): return a matrix containing the glucose level for each pixel
+        get_oxygen(): return a matrix containing the oxygen level for each pixel
+
+    """
     def __init__(self, x_size, y_size, params: dict, treatment_planning=None):
         self.y_size = y_size
         self.x_size = x_size
