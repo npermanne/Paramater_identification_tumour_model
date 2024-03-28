@@ -16,12 +16,6 @@ torch.manual_seed(2990)
 RESULTS_FOLDER = "results"
 
 
-######################################################################################
-#
-# CLASS DESCRIBING THE INSTANTIATION, TRAINING AND EVALUATION OF THE MODEL
-#
-######################################################################################
-
 class Network:
     """
     A class that describe the instantiation, the training and the evaluation of the model
