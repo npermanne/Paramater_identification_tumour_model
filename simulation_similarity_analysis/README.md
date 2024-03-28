@@ -1,2 +1,0 @@
-# Inherent similarity analysis
-

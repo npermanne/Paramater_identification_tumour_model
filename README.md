@@ -12,7 +12,7 @@ We use a neural network composed of convolution layers and long-short term memor
 ## Features
 - [x] Dataset generation (See [Datasets](datasets/README.md))
 - [x] Deep learning model (See [Networks](networks/README.md))
-- [x] Inherent difference in simulation outputs (See [Inherent similarity analysis](simulation_similarity_analysis/README.md))
+- [x] Inherent difference in simulation outputs (See the jupyter notebook in the `simulation_similarity_analysis` directory)
 - [ ] Try to predict others parameters (cell_cycle only)
 - [ ] Improve performance
 
