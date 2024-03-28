@@ -30,11 +30,6 @@ PARAMETERS = [
 DATA_NAME = "image{}_type={}_time={}.npy"
 
 
-#
-# Class filed with datasets that allows easy iteration and comparison between sample
-#
-
-
 # Allow to crop an image
 def crop(image, percentage=0.5):
     destination_size = len(image) * percentage
@@ -44,6 +39,30 @@ def crop(image, percentage=0.5):
 
 
 class Comparator:
+    """
+    A class filed with datasets that allows easy iteration and comparison between sample
+
+    Parameters:
+        datasets_name (list): List of names of datasets contained in this comparator
+
+    Attributes:
+        general_dataset (dataframe): Pandas dataframe containing all the sample from all the dataset
+
+    Methods:
+        __len__(): Returns the number of samples in this comparator
+        __getitem__(item): Return a specific sample and his parameter
+        get_all_value(param, value): Get all value that respect param == value
+        get_all_indexes(param, value): Get all indexes that respect param == value
+        get_possible_values(param): Get all possible values that param can take
+        compare(compare_function, i1, i2, crop_percentage=0.5): Compare two sample at index i1 and i2 with a specific function
+        diff(i1, i2, crop_percentage=0.5): Returns the absolute difference between sample i1 and i2
+        corr_hist(i1, i2, bins=100, crop_percentage=0.5): Returns the histogram correlation between sample i1 and i2
+        ssim(i1, i2, crop_percentage=0.5): Returns the structural similarity index(SSIM) between sample i1 and i2
+        mean_absolute_error(i1, i2, crop_percentage=0.5): Returns the mean absolute difference between sample i1 and i2
+        root_mean_squared_error(i1, i2, crop_percentage=0.5): Returns the root mean squared difference between sample i1 and i2
+        max_absolute_error(i1, i2, crop_percentage=0.5): Returns the max absolute difference between sample i1 and i2
+    """
+
     def __init__(self, *datasets_name):
         self.general_dataset = None
 
@@ -80,20 +99,16 @@ class Comparator:
 
         return ret, param
 
-    # Get all value that respect param == value
     def get_all_value(self, param, value):
         indexes = self.general_dataset.index[self.general_dataset[param] == value].tolist()
         return [self.__getitem__(i)[0] for i in indexes]
 
-    # Get all indexes that respect param == value
     def get_all_indexes(self, param, value):
         return self.general_dataset.index[self.general_dataset[param] == value].tolist()
 
-    # Get possibles value of a parameter:
     def get_possible_values(self, param):
         return np.array(list(set(self.general_dataset[param])))
 
-    # Apply function to 2 images (compare them)
     def compare(self, compare_function, i1, i2, crop_percentage=0.5):
         images1 = self.__getitem__(i1)[0]
         images2 = self.__getitem__(i2)[0]
@@ -108,11 +123,9 @@ class Comparator:
 
         return ret
 
-    # Difference between 2 images
     def diff(self, i1, i2, crop_percentage=0.5):
         return self.compare(lambda a, b: np.absolute(a - b), i1, i2, crop_percentage=crop_percentage)
 
-    # Histogram correlation between 2 images
     def corr_hist(self, i1, i2, bins=100, crop_percentage=0.5):
         def corr_hist_function(image1, image2):
             min_value, max_value = min(np.min(image1), np.min(image2)), max(np.max(image1), np.max(image2))
@@ -122,7 +135,6 @@ class Comparator:
 
         return self.compare(corr_hist_function, i1, i2, crop_percentage=crop_percentage)
 
-    # Structural Similarity index (SSIM) between 2 images
     def ssim(self, i1, i2, crop_percentage=0.5):
         def ssim_function(image1, image2):
             min_value, max_value = min(np.min(image1), np.min(image2)), max(np.max(image1), np.max(image2))
@@ -130,15 +142,12 @@ class Comparator:
 
         return self.compare(ssim_function, i1, i2, crop_percentage=crop_percentage)
 
-    # Mean absolute error
     def mean_absolute_error(self, i1, i2, crop_percentage=0.5):
         return self.compare(lambda a, b: np.abs(a - b).mean(), i1, i2, crop_percentage=crop_percentage)
 
-    # Root mean squared error
     def root_mean_squared_error(self, i1, i2, crop_percentage=0.5):
         return self.compare(lambda a, b: math.sqrt(np.square(a - b).mean()), i1, i2, crop_percentage=crop_percentage)
 
-    # Max absolute error
     def max_absolute_error(self, i1, i2, crop_percentage=0.5):
         return self.compare(lambda a, b: np.max(np.absolute(a - b)), i1, i2, crop_percentage=crop_percentage)
 
@@ -156,6 +165,7 @@ def value_that_diff(array, target_diff):
             i += 1
 
     return tab
+
 
 if __name__ == '__main__':
     comparator = Comparator(
