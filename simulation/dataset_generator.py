@@ -19,15 +19,38 @@ OXYGEN = "oxygen"
 GLUCOSE = "glucose"
 
 
-# Class to generate a dataset of simulations images and their respective target parameters
 class DatasetGenerator:
     """
     Class to generate a dataset of simulations images and their respective target parameters
-    @ Params:
-    img_size: size of the image (tuple)
-    interval: interval between 2 consecutive draws  (in hours)
-    n_draw: number of draw in the total sequence
-    parameters: dictionary of parameters
+
+    Parameters:
+        img_size (tuple): size of the image
+        start_draw (int): time of the first draw
+        interval (int): interval between 2 consecutive draws  (in hours)
+        n_draw (int): number of draw in the total sequence
+        parameter_data_file (string): name of the csv file where the range of parameter is stored
+        parameters_of_interest (list): list of the varying parameters of the dataset
+        n_samples (int): number of samples in the dataset
+        name (sting): name of the dataset to create
+
+    Attributes:
+        img_size (tuple): size of the image
+        start_draw (int): time of the first draw
+        interval (int): interval between 2 consecutive draws  (in hours)
+        n_draw (int): number of draw in the total sequence
+        parameter_data (Dataframe): dataframe containing the range of parameter
+        parameters_of_interest (list): list of the varying parameters of the dataset
+        n_samples (int): number of samples in the dataset
+        name (sting): name of the dataset folder to create
+
+    Methods:
+        generate_sample(parameter, color_type=True): generate a single sample with a specific set of parameter
+        plot_sample(parameter): plot a single sample with a specific set of parameter
+        generate_parameters(): generate randomly n_sample different parameter
+        generate_dataset(): generate randomly an entire dataset
+        generate_dataset_multi_process(process_number: int, chunksize: int): generate randomly an entire dataset using multiple thread
+        generate_missing(): generate the missing sample in case there is a problem
+
     """
 
     def __init__(self, img_size, start_draw, interval, n_draw, parameter_data_file, parameters_of_interest, n_samples,
