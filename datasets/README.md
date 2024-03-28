@@ -7,4 +7,4 @@ Each folder in this directory correspond in a dataset. Each folder name is compo
 - The size of the image
 
 In each folder we have a `dataset.csv` file containing the sample number and his associated parameter.
-Each image(matrix) are stored as numpy file. Each sample contain $$ N_DRAWS \times N_TYPES $$ different images
+Each image(matrix) are stored as numpy file. Each sample contain N_DRAWS x N_TYPES different images
