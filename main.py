@@ -12,6 +12,7 @@ if __name__ == '__main__':
     parser = parser.parse_args()
     file = open(os.path.join("configurations", f"{parser.config}.yaml"))
     param = yaml.safe_load(file)
+    param["NAME"] = parser.config
 
     network = Network(param)
     if parser.train:

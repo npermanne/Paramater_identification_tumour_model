@@ -1,8 +1,6 @@
 # Configurations
 The configuration files are all `yaml` files that describe the dataset used, the model used and the training parameter.
 Below are all the configuration parameter:
-
-- `NAME`: Name of the result folder
 - `DATASET`:
   - `FOLDER_NAME`: Name of the dataset folder
   - `N_DRAWS`: Number of draws used in the model (for example 4 => {350 , 450 , 550 , 650})
