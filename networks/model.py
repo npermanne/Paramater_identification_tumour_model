@@ -50,6 +50,7 @@ class Network:
         evaluate(): Evaluate the model
 
     """
+
     def __init__(self, param):
         # USEFUL VARIABLES
         self.img_types = param["DATASET"]["IMG_TYPES"]
@@ -57,6 +58,7 @@ class Network:
         self.parameter_of_interest = param["DATASET"]["PARAMETERS_OF_INTEREST"]
         self.batch_size = param["TRAINING"]["BATCH_SIZE"]
         self.epochs = param["TRAINING"]["EPOCH"]
+        self.learning_rate = param["TRAINING"]["LEARNING_RATE"]
         self.name = param["NAME"]
 
         # CREATE FOLDER FOR SAVING
@@ -95,7 +97,7 @@ class Network:
         self.network = Net(self.param_architecture).to(param["TRAINING"]["DEVICE"])
 
         # TRAINING PARAMETERS
-        self.optimizer = torch.optim.Adam(self.network.parameters())
+        self.optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate)
         self.criterion = nn.MSELoss()
 
     def load_weights(self):
@@ -140,7 +142,7 @@ class Network:
                     # Validation Loss data
                     running_validation_loss += validation_loss.item()
 
-            validation_losses[iter_epoch] = running_loss / (iter_val + 1)
+            validation_losses[iter_epoch] = running_validation_loss / (iter_val + 1)
 
         # SAVE WEIGHT
         torch.save(self.network.state_dict(), self.path_weight)
