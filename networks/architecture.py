@@ -26,13 +26,20 @@ class Net(nn.Module):
 
         # --------------------------------------------------------------------------------------
         # CNN
-        self.convolutions = [
-            nn.Conv2d(self.n_types, 64, kernel_size=3, padding=1) if i == 0
-            else nn.Conv2d(64*(2**(i-1)), 64*(2**i), kernel_size=3, padding=1) for i in range(self.convolution_layers)]
-        self.pools = [nn.MaxPool2d(kernel_size=2, stride=2) for _ in range(self.convolution_layers)]
+
+        self.sequential_convolution = nn.Sequential()
+        for i in range(self.convolution_layers):
+            if i == 0:
+                self.sequential_convolution.append(nn.Conv2d(self.n_types, 64, kernel_size=3, padding=1))
+            else:
+                self.sequential_convolution.append(
+                    nn.Conv2d(64 * (2 ** (i - 1)), 64 * (2 ** i), kernel_size=3, padding=1))
+            self.sequential_convolution.append(nn.ReLU())
+            self.sequential_convolution.append(nn.MaxPool2d(kernel_size=2, stride=2))
 
         # size: (16/2^(conv_layer-1) x Height x Width)
-        self.linear1 = nn.Linear(int(16/(2**(self.convolution_layers-1))) * self.height * self.width, self.input_LSTM)
+        self.linear1 = nn.Linear(int(16 / (2 ** (self.convolution_layers - 1))) * self.height * self.width,
+                                 self.input_LSTM)
         # size: (input_LSTM)
 
         # --------------------------------------------------------------------------------------
@@ -54,12 +61,10 @@ class Net(nn.Module):
         # (Batch Size, n_draws, n_types, Height,  Width)
         x = x.view(self.batch_size * self.n_draws, self.n_types, self.height, self.width)
         # (Batch Size x n_draws, n_types, Height,  Width)
-        for i in range(self.convolution_layers):
-            x = F.relu(self.convolutions[i](x))
-            # (Batch Size x n_draws, 64*2^i, Height/(2^i),  Width/(2^i)
-            x = F.relu(self.pools[i](x))
-            # (Batch Size x n_draws, 64*2^i, Height/(2^(i+1)),  Width/(2^(i+1))
-        x = x.view(self.batch_size, self.n_draws, int(16/(2**(self.convolution_layers-1))) * self.height * self.width)
+        x = self.sequential_convolution(x)
+        # (Batch Size x n_draws, 64*(2^conv_layer-1) , Height/(2^conv_layer),  Width/(2^conv_layer))
+        x = x.view(self.batch_size, self.n_draws,
+                   int(16 / (2 ** (self.convolution_layers - 1))) * self.height * self.width)
         # (Batch Size x n_draws, 16/2^(conv_layer-1) x Height x Width)
         x = F.relu(self.linear1(x))
         # (Batch Size, n_draws, input_LSTM)
