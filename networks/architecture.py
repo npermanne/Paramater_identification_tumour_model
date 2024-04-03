@@ -59,6 +59,7 @@ class Net(nn.Module):
 
     def forward(self, x):
         # (Batch Size, n_draws, n_types, Height,  Width)
+        self.batch_size = x.shape[0]
         x = x.view(self.batch_size * self.n_draws, self.n_types, self.height, self.width)
         # (Batch Size x n_draws, n_types, Height,  Width)
         x = self.sequential_convolution(x)
