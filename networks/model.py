@@ -7,6 +7,8 @@ import torch
 import torch.nn as nn
 import os
 import pandas as pd
+from torchinfo import summary
+from tkinter import *
 
 # Random Seed
 np.random.seed(2990)
@@ -94,22 +96,31 @@ class Network:
             "LSTM_LAYERS": param["MODEL"]["LSTM_LAYERS"],
             "CONV_LAYERS": param["MODEL"]["CONV_LAYERS"]
         }
-        self.network = Net(self.param_architecture).to(param["TRAINING"]["DEVICE"])
+        self.device = torch.device(param["TRAINING"]["DEVICE"])
+        self.network = Net(self.param_architecture).to(self.device)
 
         # TRAINING PARAMETERS
         self.optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate)
         self.criterion = nn.MSELoss()
 
+    def __str__(self):
+        # (Batch Size, n_draws, n_types, Height,  Width)
+        model_stats = summary(self.network, (
+            self.batch_size, self.n_draws, len(self.img_types), self.train_dataset.get_height(),
+            self.train_dataset.get_width()), verbose=0)
+        return str(model_stats)
+
     def load_weights(self):
         self.network.load_state_dict(torch.load(self.path_weight))
 
-    def train(self):
+    def train(self, epoch_variable=None):
         validation_losses = np.zeros(self.epochs)
         losses = np.zeros(self.epochs)
 
         # EPOCHS ITERATIONS
         for iter_epoch in range(self.epochs):
             print("Epoch {}/{}".format(iter_epoch, self.epochs), end='\r')
+
 
             # TRAINING
             running_loss = 0
@@ -144,10 +155,14 @@ class Network:
 
             validation_losses[iter_epoch] = running_validation_loss / (iter_val + 1)
 
+            epoch_variable.set((iter_epoch+1) / self.epochs * 100)
+        print("Finished")
         # SAVE WEIGHT
         torch.save(self.network.state_dict(), self.path_weight)
 
         # PLOT PERFORMANCE CURVE
+        plt.switch_backend('agg')
+        plt.cla()
         X = np.arange(self.epochs)
         plt.plot(X, losses, label="Training Loss")
         plt.plot(X, validation_losses, label="Validation Loss")
