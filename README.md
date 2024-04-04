@@ -17,12 +17,17 @@ We use a neural network composed of convolution layers and long-short term memor
 - [ ] Improve performance
 
 ## Usage
-Evaluate the model and the dataset
+Evaluate the model and the dataset:
 ```bash
 python3 main.py -config config.yaml -train
 ```
 - The parameter `config.yaml` is stored in the `configurations` folder and describes the dataset used, the deep learning model and the training parameters (See [Configuration](configurations/README.md))
 - The parameter `-train` is optional and can be used to train the model
+
+Graphical interface to show the already trained model and to train more:
+```bash
+python3 graphical_interface.py
+```
 ## Results
 (See [Results](results/README.md)) 
 ## Dependencies
