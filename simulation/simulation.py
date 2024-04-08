@@ -194,7 +194,7 @@ class Simulation:
         return self.grid.glucose
 
     def get_oxygen(self):
-        return self.grid.glucose
+        return self.grid.oxygen
 
 
 def patch_type_color(patch):
