@@ -431,6 +431,9 @@ class Grid:
                 sum_x += i * ccell_count
                 sum_y += j * ccell_count
                 count += ccell_count
+
+        if count == 0:
+            return -1, -1
         self.center_x = sum_x / count
         self.center_y = sum_y / count
 
