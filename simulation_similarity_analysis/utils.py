@@ -54,8 +54,22 @@ class Metric(Enum):
     CORRELATION_HISTOGRAM = 'correlation histogram'
     SSIM = 'ssim'
     MEAN_ABSOLUTE_ERROR = 'mean_absolute_error'
-    ROOT_MEAN_ABSOLUTE_ERROR = 'root_mean_squared_error'
+    ROOT_MEAN_SQUARED_ERROR = 'root_mean_squared_error'
     MAX_ABSOLUTE_ERROR = 'max_absolute_error'
+
+    def __str__(self):
+        if self == Metric.IMAGE_ABSOLUTE_DIFFERENCE:
+            return "image absolute difference"
+        elif self == Metric.CORRELATION_HISTOGRAM:
+            return "histogram correlation"
+        elif self == Metric.SSIM:
+            return "ssim index"
+        elif self == Metric.MEAN_ABSOLUTE_ERROR:
+            return "mean absolute error"
+        elif self == Metric.ROOT_MEAN_SQUARED_ERROR:
+            return "root mean squared error"
+        elif self == Metric.MAX_ABSOLUTE_ERROR:
+            return "max absolute error"
 
 
 class Comparator:
@@ -181,7 +195,7 @@ class Comparator:
             pairs = np.unique(pairs, axis=0)
             all_indexes_pairs = pairs if i == 0 else np.concatenate([all_indexes_pairs, pairs])
 
-        random_indices = np.random.choice(len(all_indexes_pairs), size=iteration, replace=False)
+        random_indices = np.random.choice(len(all_indexes_pairs), size=iteration, replace=True)
         all_indexes_pairs = all_indexes_pairs[random_indices]
 
         global metric1
@@ -220,7 +234,7 @@ class Comparator:
                     results = pool.map(metric3, all_indexes_pairs)
                 case Metric.MEAN_ABSOLUTE_ERROR:
                     results = pool.map(metric4, all_indexes_pairs)
-                case Metric.ROOT_MEAN_ABSOLUTE_ERROR:
+                case Metric.ROOT_MEAN_SQUARED_ERROR:
                     results = pool.map(metric5, all_indexes_pairs)
                 case Metric.MAX_ABSOLUTE_ERROR:
                     results = pool.map(metric6, all_indexes_pairs)
