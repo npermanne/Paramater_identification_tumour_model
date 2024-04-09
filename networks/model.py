@@ -155,7 +155,7 @@ class Network:
 
             validation_losses[iter_epoch] = running_validation_loss / (iter_val + 1)
 
-            epoch_variable.set((iter_epoch+1) / self.epochs * 100)
+            if epoch_variable is not None: epoch_variable.set((iter_epoch+1) / self.epochs * 100)
         print("Finished")
         # SAVE WEIGHT
         torch.save(self.network.state_dict(), self.path_weight)
