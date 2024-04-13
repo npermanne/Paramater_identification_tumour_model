@@ -17,7 +17,7 @@ ALL_PARAMETERS = ["sources", "average_healthy_glucose_absorption", "average_canc
                   "source_glucose_supply", "source_oxygen_supply", "glucose_diffuse_rate",
                   "oxygen_diffuse_rate", "h_cells", "cell_cycle"]
 FONT_TITLE = ("Verdana", 15, "bold")
-FONT_TABLE = ("Verdana", 15)
+FONT_TABLE = ("Verdana", 12)
 VALUES_LEARNING_RATE = [1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]
 BLEU = ["#9AB6D3","#011E41","#5EB3E4"]
 CONFIGURATION_COLOR = BLEU[1]
@@ -389,6 +389,6 @@ curve = curve_canvas.create_image((300, 200), image=None)
 Label(results_frame, text="Test results:", font=FONT_TITLE, bg=BACKGROUND_TEXT).grid(row=0, column=2)
 table_canvas = Canvas(results_frame, width=600, height=400, bg=BACKGROUND_TEXT, highlightbackground=CONTOUR)
 table_canvas.grid(row=1, column=2)
-table = table_canvas.create_text((220, 20), text=None, font=FONT_TABLE)
+table = table_canvas.create_text((300, 100), text=None, font=FONT_TABLE)
 
 window.mainloop()
