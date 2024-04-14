@@ -19,7 +19,7 @@ ALL_PARAMETERS = ["sources", "average_healthy_glucose_absorption", "average_canc
 FONT_TITLE = ("Verdana", 15, "bold")
 FONT_TABLE = ("Verdana", 12)
 VALUES_LEARNING_RATE = [1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]
-BLEU = ["#9AB6D3","#011E41","#5EB3E4"]
+BLEU = ["#9AB6D3", "#011E41", "#5EB3E4"]
 CONFIGURATION_COLOR = BLEU[1]
 DATASET_TITLE_COLOR = BLEU[0]
 DATASET_BODY_COLOR = BLEU[0]
@@ -135,6 +135,8 @@ learning_rate = DoubleVar()
 n_epochs = IntVar()
 batch_size = IntVar()
 iter_epoch = DoubleVar()
+early_stopping_delta = DoubleVar()
+early_stopping_patience = IntVar()
 
 
 # Brain and logic
@@ -154,6 +156,8 @@ def config_change(event):
     conv_layers.set(config["MODEL"]["CONV_LAYERS"])
     learning_rate.set(config["TRAINING"]["LEARNING_RATE"])
     n_epochs.set(config["TRAINING"]["EPOCH"])
+    early_stopping_delta.set(config["TRAINING"]["EARLY_STOPPING_DELTA"])
+    early_stopping_patience.set(config["TRAINING"]["EARLY_STOPPING_PATIENCE"])
     batch_size.set(config["TRAINING"]["BATCH_SIZE"])
 
 
@@ -175,6 +179,8 @@ def onValueChange(*event):
         cond &= config["MODEL"]["CONV_LAYERS"] == conv_layers.get()
         cond &= config["TRAINING"]["LEARNING_RATE"] == learning_rate.get()
         cond &= config["TRAINING"]["EPOCH"] == n_epochs.get()
+        cond &= config["TRAINING"]["EARLY_STOPPING_DELTA"] == early_stopping_delta.get()
+        cond &= config["TRAINING"]["EARLY_STOPPING_PATIENCE"] == early_stopping_patience.get()
         cond &= config["TRAINING"]["BATCH_SIZE"] == batch_size.get()
         if not cond:
             config_box.set("new config")
@@ -222,6 +228,8 @@ def run():
 
         config["TRAINING"]["LEARNING_RATE"] = learning_rate.get()
         config["TRAINING"]["EPOCH"] = n_epochs.get()
+        config["TRAINING"]["EARLY_STOPPING_DELTA"] = early_stopping_delta.get()
+        config["TRAINING"]["EARLY_STOPPING_PATIENCE"] = early_stopping_patience.get()
         config["TRAINING"]["BATCH_SIZE"] = batch_size.get()
         config["TRAINING"]["DEVICE"] = 'cpu'
 
@@ -279,7 +287,8 @@ configuration_frame.grid_rowconfigure(0, weight=1)
 
 Label(configuration_frame, text="Configuration:", bg=RUN).grid(row=0, column=0, sticky='e')
 config_box = Combobox(configuration_frame, width=50,
-                      values=[file[:-5] for file in os.listdir("configurations") if file.endswith(".yaml")],foreground=BACKGROUND_COMBO)
+                      values=[file[:-5] for file in os.listdir("configurations") if file.endswith(".yaml")],
+                      foreground=BACKGROUND_COMBO)
 config_box.grid(row=0, column=1, sticky='w')
 config_box.bind("<<ComboboxSelected>>", config_change)
 Button(configuration_frame, text="Run", command=run, bg=RUN).grid(row=0, column=2, sticky='e')
@@ -294,7 +303,8 @@ dataset_parameter_frame_body.grid_columnconfigure(1, weight=1)
 for i in range(len(ALL_PARAMETERS) + 3): dataset_parameter_frame_body.grid_rowconfigure(i, weight=1)
 # Folder name
 Label(dataset_parameter_frame_body, text="Folder name:", bg=BACKGROUND_TEXT).grid(row=0, column=0)
-folderbox = Combobox(dataset_parameter_frame_body, textvariable=dataset_name, state='readonly', width=60, foreground=BACKGROUND_COMBO,
+folderbox = Combobox(dataset_parameter_frame_body, textvariable=dataset_name, state='readonly', width=60,
+                     foreground=BACKGROUND_COMBO,
                      values=[folder for folder in os.listdir("datasets") if not os.path.isfile(folder)])
 folderbox.grid(row=0, column=1)
 folderbox.bind('<<ComboboxSelected>>', onValueChange)
@@ -308,15 +318,15 @@ Scale(dataset_parameter_frame_body, from_=1, to=8, orient='horizontal', variable
 Label(dataset_parameter_frame_body, text="Images types:", bg=BACKGROUND_TEXT).grid(row=2, column=0)
 for i, image_type in enumerate(ALL_IMAGES_TYPES):
     Checkbutton(dataset_parameter_frame_body, text=image_type, variable=images_types[image_type],
-                command=onValueChange, bg=BACKGROUND_TEXT,highlightbackground=DATASET_BODY_COLOR).grid(row=3 + i,
-                                                                column=0,
-                                                                sticky='w')
+                command=onValueChange, bg=BACKGROUND_TEXT, highlightbackground=DATASET_BODY_COLOR).grid(row=3 + i,
+                                                                                                        column=0,
+                                                                                                        sticky='w')
 
 # Parameters of interest
 Label(dataset_parameter_frame_body, text="Parameters of interests:", bg=BACKGROUND_TEXT).grid(row=2, column=1)
 for i, parameter in enumerate(ALL_PARAMETERS):
     Checkbutton(dataset_parameter_frame_body, text=parameter, variable=parameters_of_interest[parameter],
-                command=onValueChange, bg=BACKGROUND_TEXT,highlightbackground=DATASET_BODY_COLOR).grid(
+                command=onValueChange, bg=BACKGROUND_TEXT, highlightbackground=DATASET_BODY_COLOR).grid(
         row=3 + i, column=1, sticky='w')
 
 # Component Model
@@ -339,12 +349,14 @@ CustomScale(model_parameter_frame_body, allowedValue=[1, 10, 100, 200, 500, 1000
 
 # Number of LSTM layers
 Label(model_parameter_frame_body, text="Numbers of LSTM Layers:", bg=BACKGROUND_TEXT).grid(row=2, column=0)
-Scale(model_parameter_frame_body, from_=1, to=5, orient='horizontal', variable=lstm_layers, command=onValueChange, bg=BACKGROUND_TEXT).grid(
+Scale(model_parameter_frame_body, from_=1, to=5, orient='horizontal', variable=lstm_layers, command=onValueChange,
+      bg=BACKGROUND_TEXT).grid(
     row=2, column=1)
 
 # Number of convolution layers
 Label(model_parameter_frame_body, text="Numbers of Convolution Layers:", bg=BACKGROUND_TEXT).grid(row=3, column=0)
-Scale(model_parameter_frame_body, from_=1, to=4, orient='horizontal', variable=conv_layers, command=onValueChange, bg=BACKGROUND_TEXT).grid(
+Scale(model_parameter_frame_body, from_=1, to=4, orient='horizontal', variable=conv_layers, command=onValueChange,
+      bg=BACKGROUND_TEXT).grid(
     row=3, column=1)
 
 # Component Learning
@@ -353,12 +365,12 @@ Label(learning_parameter_frame_title, text="Learning Parameters", font=FONT_TITL
 
 learning_parameter_frame_body.grid_columnconfigure(0, weight=1)
 learning_parameter_frame_body.grid_columnconfigure(1, weight=1)
-for i in range(3): learning_parameter_frame_body.grid_rowconfigure(i, weight=1)
+for i in range(5): learning_parameter_frame_body.grid_rowconfigure(i, weight=1)
 
 # Learning rate
 Label(learning_parameter_frame_body, text="Learning rate:", bg=BACKGROUND_TEXT).grid(row=0, column=0)
 learning_rate_box = Combobox(learning_parameter_frame_body, values=VALUES_LEARNING_RATE, state='readonly',
-                             textvariable=learning_rate,background=BACKGROUND_COMBO)
+                             textvariable=learning_rate, background=BACKGROUND_COMBO)
 learning_rate_box.grid(row=0, column=1)
 learning_rate_box.bind('<<ComboboxSelected>>', onValueChange)
 
@@ -367,10 +379,18 @@ Label(learning_parameter_frame_body, text="Numbers of epochs:", bg=BACKGROUND_TE
 CustomScale(learning_parameter_frame_body, allowedValue=[1, 5, 10, 15, 20, 25, 50, 75, 100, 150, 200], from_=1, to=200,
             orient='horizontal', variable=n_epochs, command=onValueChange, bg=BACKGROUND_TEXT).grid(row=1, column=1)
 
+# Early stopping delta
+Label(learning_parameter_frame_body, text="Delta of the early stopper:", bg=BACKGROUND_TEXT).grid(row=2, column=0)
+Entry(learning_parameter_frame_body, textvariable=early_stopping_delta).grid(row=2, column=1)
+
+# Early stopping patience
+Label(learning_parameter_frame_body, text="Patience of the early stopper:", bg=BACKGROUND_TEXT).grid(row=3, column=0)
+Entry(learning_parameter_frame_body, textvariable=early_stopping_patience).grid(row=3, column=1)
+
 # Batch Size
-Label(learning_parameter_frame_body, text="Batch Size:", bg=BACKGROUND_TEXT).grid(row=2, column=0)
+Label(learning_parameter_frame_body, text="Batch Size:", bg=BACKGROUND_TEXT).grid(row=4, column=0)
 CustomScale(learning_parameter_frame_body, allowedValue=[1, 2, 4, 8, 16, 32, 64], from_=1, to=64,
-            orient='horizontal', variable=batch_size, command=onValueChange, bg=BACKGROUND_TEXT).grid(row=2, column=1)
+            orient='horizontal', variable=batch_size, command=onValueChange, bg=BACKGROUND_TEXT).grid(row=4, column=1)
 
 # Results
 # Architecture
