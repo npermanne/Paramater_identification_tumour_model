@@ -10,6 +10,7 @@ Below are all the configuration parameter:
   - `INPUT_LSTM`: Size of the vector before the LSTM block
   - `OUTPUT_LSTM`: Size of the vector after the LSTM block
   - `LSTM_LAYER`: Number of LSTM layers
+  - `CONV_LAYERS:` Number of convolutions layers
 - `TRAINING`:
   - `LEARNING_RATE`: Not use
   - `EPOCH`: Number of epoch of training
