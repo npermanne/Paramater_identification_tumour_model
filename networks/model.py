@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from networks.dataLoader import SimulationDataset
+from networks.early_stopping import EarlyStopper
 import numpy as np
 from networks.architecture import Net
 from torch.utils.data import DataLoader
@@ -50,7 +51,6 @@ class Network:
         load_weights(): Load the weights if any are present
         train(): Train the model and save the weight
         evaluate(): Evaluate the model
-
     """
 
     def __init__(self, param):
@@ -102,6 +102,9 @@ class Network:
         # TRAINING PARAMETERS
         self.optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate)
         self.criterion = nn.MSELoss()
+        patience = param["TRAINING"].get("EARLY_STOPPING_PATIENCE", 10)
+        delta = param["TRAINING"].get("EARLY_STOPPING_DELTA", 0.2)
+        self.early_stopper = EarlyStopper(patience, delta)
 
     def __str__(self):
         # (Batch Size, n_draws, n_types, Height,  Width)
@@ -120,7 +123,6 @@ class Network:
         # EPOCHS ITERATIONS
         for iter_epoch in range(self.epochs):
             print("Epoch {}/{}".format(iter_epoch, self.epochs), end='\r')
-
 
             # TRAINING
             running_loss = 0
@@ -155,7 +157,11 @@ class Network:
 
             validation_losses[iter_epoch] = running_validation_loss / (iter_val + 1)
 
-            if epoch_variable is not None: epoch_variable.set((iter_epoch+1) / self.epochs * 100)
+            if epoch_variable is not None: epoch_variable.set((iter_epoch + 1) / self.epochs * 100)
+
+            if self.early_stopper(running_validation_loss):
+                print("Early stop")
+                break
         print("Finished")
         # SAVE WEIGHT
         torch.save(self.network.state_dict(), self.path_weight)
@@ -198,3 +204,5 @@ class Network:
 
         df = pd.DataFrame(data)
         df.to_csv(self.path_test_data, index=False)
+
+        return np.mean(differences)
