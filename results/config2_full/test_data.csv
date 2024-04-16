@@ -1,0 +1,6 @@
+Parameters,Means,Standard Deviation
+average_healthy_glucose_absorption,0.24267833,0.14658868
+average_cancer_glucose_absorption,0.19524212,0.126845
+average_healthy_oxygen_consumption,0.18634616,0.11207359
+average_cancer_oxygen_consumption,0.18642767,0.13107292
+cell_cycle,0.13229415,0.124101534
