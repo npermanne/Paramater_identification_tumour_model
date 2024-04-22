@@ -1,6 +1,7 @@
 from grid import Grid
 from cell import HealthyCell, CancerCell, OARCell, Cell
 from matplotlib import pyplot as plt
+from matplotlib.animation import FuncAnimation
 from enum import Enum
 import numpy as np
 import random
@@ -72,6 +73,7 @@ class Simulation:
         get_oxygen(): return a matrix containing the oxygen level for each pixel
 
     """
+
     def __init__(self, x_size, y_size, params: dict, treatment_planning=None):
         self.y_size = y_size
         self.x_size = x_size
@@ -204,46 +206,93 @@ def patch_type_color(patch):
         return patch[0].cell_color()
 
 
-if __name__ == '__main__':
-    for i in DEFAULT_PARAMETERS.keys():
-        print(i)
-    iterations = 1200
-    STEP = 5
-    a = np.zeros(24)
-    a[23] = 0
-    planning = np.tile(a, iterations // 24)
-    simu = Simulation(50, 50, DEFAULT_PARAMETERS, planning)
 
-    plt.ion()
+def make_gif(parameter, iteration, step, interval, filename, treatment=None):
+    simu = Simulation(60, 60, parameter, treatment_planning=treatment)
     fig, axis = plt.subplots(2, 2)
     fig.suptitle("Simulation with {} hours passed".format(0))
-
     type_plot = axis[0, 0].imshow(simu.get_cells_type())
     axis[0, 0].set_title('Type')
+    axis[0, 0].axis('off')
 
     density_plot = axis[0, 1].imshow(simu.get_cells_density())
     axis[0, 1].set_title('Density')
-    colorbar_density = plt.colorbar(density_plot)
+    axis[0, 1].axis('off')
+    colorbar_density = plt.colorbar(density_plot, ax=axis[0, 1])
 
     glucose_plot = axis[1, 0].imshow(simu.get_glucose())
     axis[1, 0].set_title('Glucose')
-    colorbar_glucose = plt.colorbar(glucose_plot)
+    axis[1, 0].axis('off')
+    colorbar_glucose = plt.colorbar(glucose_plot, ax=axis[1, 0])
 
     oxygen_plot = axis[1, 1].imshow(simu.get_oxygen())
     axis[1, 1].set_title('Oxygen')
-    colorbar_oxygen = plt.colorbar(oxygen_plot)
+    axis[1, 1].axis('off')
+    colorbar_oxygen = plt.colorbar(oxygen_plot, ax=axis[1, 1])
 
-    for i in range(iterations // STEP):
+    def anim_function(frame):
         fig.suptitle("Simulation with {} hours passed".format(simu.hours_passed))
-        simu.cycle(STEP)
+        simu.cycle(step)
+        img_density = np.array(simu.get_cells_density())
+        img_glucose = simu.get_glucose()
+        img_oxygen = simu.get_oxygen()
 
-        type_plot = axis[0, 0].imshow(simu.get_cells_type())
-        density_plot = axis[0, 1].imshow(simu.get_cells_density())
-        colorbar_density.update_normal(density_plot)
-        glucose_plot = axis[1, 0].imshow(simu.get_glucose())
-        colorbar_glucose.update_normal(glucose_plot)
-        oxygen_plot = axis[1, 1].imshow(simu.get_oxygen())
-        colorbar_oxygen.update_normal(oxygen_plot)
+        type_plot.set_data(simu.get_cells_type())
+        density_plot.set_data(img_density)
+        glucose_plot.set_data(img_glucose)
+        oxygen_plot.set_data(img_oxygen)
 
-        fig.canvas.draw()
-        fig.canvas.flush_events()
+        # Update colorbar's mappable
+        colorbar_density.mappable.set_clim(vmin=np.min(img_density), vmax=np.max(img_density))
+        colorbar_glucose.mappable.set_clim(vmin=np.min(img_glucose), vmax=np.max(img_glucose))
+        colorbar_oxygen.mappable.set_clim(vmin=np.min(img_oxygen), vmax=np.max(img_oxygen))
+
+    anim_created = FuncAnimation(fig, anim_function, frames=iteration, interval=interval)
+    anim_created.save(filename)
+
+
+
+if __name__ == '__main__':
+    make_gif(DEFAULT_PARAMETERS, 240, 5, 25, "bob.gif")
+# for i in DEFAULT_PARAMETERS.keys():
+#     print(i)
+# iterations = 1200
+# STEP = 5
+# a = np.zeros(24)
+# a[23] = 0
+# planning = np.tile(a, iterations // 24)
+# simu = Simulation(50, 50, DEFAULT_PARAMETERS, planning)
+#
+# plt.ion()
+# fig, axis = plt.subplots(2, 2)
+# fig.suptitle("Simulation with {} hours passed".format(0))
+#
+# type_plot = axis[0, 0].imshow(simu.get_cells_type())
+# axis[0, 0].set_title('Type')
+#
+# density_plot = axis[0, 1].imshow(simu.get_cells_density())
+# axis[0, 1].set_title('Density')
+# colorbar_density = plt.colorbar(density_plot)
+#
+# glucose_plot = axis[1, 0].imshow(simu.get_glucose())
+# axis[1, 0].set_title('Glucose')
+# colorbar_glucose = plt.colorbar(glucose_plot)
+#
+# oxygen_plot = axis[1, 1].imshow(simu.get_oxygen())
+# axis[1, 1].set_title('Oxygen')
+# colorbar_oxygen = plt.colorbar(oxygen_plot)
+#
+# for i in range(iterations // STEP):
+#     fig.suptitle("Simulation with {} hours passed".format(simu.hours_passed))
+#     simu.cycle(STEP)
+#
+#     type_plot = axis[0, 0].imshow(simu.get_cells_type())
+#     density_plot = axis[0, 1].imshow(simu.get_cells_density())
+#     colorbar_density.update_normal(density_plot)
+#     glucose_plot = axis[1, 0].imshow(simu.get_glucose())
+#     colorbar_glucose.update_normal(glucose_plot)
+#     oxygen_plot = axis[1, 1].imshow(simu.get_oxygen())
+#     colorbar_oxygen.update_normal(oxygen_plot)
+#
+#     fig.canvas.draw()
+#     fig.canvas.flush_events()
