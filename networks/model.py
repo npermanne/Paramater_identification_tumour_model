@@ -70,7 +70,8 @@ class Network:
 
         self.path_weight = os.path.join(folder_path, "weight.pkl")
         self.path_performance_curve = os.path.join(folder_path, "performance_curve.png")
-        self.path_test_data = os.path.join(folder_path, "test_data.csv")
+        self.path_evaluation_data = os.path.join(folder_path, "evaluation_data.csv")
+        self.path_evaluation_stats = os.path.join(folder_path, "evaluation_stats.csv")
 
         # LOAD DATASET
         self.train_dataset = SimulationDataset("train", param["DATASET"]["FOLDER_NAME"],
@@ -181,6 +182,9 @@ class Network:
         self.network.train(False)
         self.network.eval()
 
+        columns = [f"predicted_{p}" for p in self.parameter_of_interest]+[f"true_{p}" for p in self.parameter_of_interest]
+        evaluation_data = pd.DataFrame(columns=columns)
+
         # EVALUATION LOOP
         differences = None
         for iter_test, data in enumerate(self.test_dataloader):
@@ -188,6 +192,10 @@ class Network:
 
             # Forward Pass
             predicted = self.network.forward(test_inputs)
+
+            # Add evaluation data
+            for i in range(len(test_outputs_scaled)):
+                evaluation_data.loc[len(evaluation_data.index)] = np.concatenate((predicted.detach().numpy()[i], test_outputs_scaled.numpy()[i]))
 
             # Compute individual differences
             if differences is None:
@@ -203,6 +211,7 @@ class Network:
         }
 
         df = pd.DataFrame(data)
-        df.to_csv(self.path_test_data, index=False)
+        df.to_csv(self.path_evaluation_stats, index=False)
+        evaluation_data.to_csv(self.path_evaluation_data, index=False)
 
         return np.mean(differences)

@@ -206,7 +206,6 @@ def patch_type_color(patch):
         return patch[0].cell_color()
 
 
-
 def make_gif(parameter, iteration, step, interval, filename, treatment=None):
     simu = Simulation(60, 60, parameter, treatment_planning=treatment)
     fig, axis = plt.subplots(2, 2)
@@ -249,7 +248,6 @@ def make_gif(parameter, iteration, step, interval, filename, treatment=None):
 
     anim_created = FuncAnimation(fig, anim_function, frames=iteration, interval=interval)
     anim_created.save(filename)
-
 
 
 if __name__ == '__main__':
