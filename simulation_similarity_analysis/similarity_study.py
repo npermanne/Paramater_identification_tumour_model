@@ -60,8 +60,5 @@ class SimilarityAnalysis:
 
 if __name__ == '__main__':
     sim = SimilarityAnalysis("cell_cycle", 0, "full_dataset_start=350_interval=100_ndraw=8_size=(64,64)")
-    sim.plot_mean_difference_image_square(350, 100, range(25))
-    for image_type in ['cells_types', 'cells_densities', 'oxygen', 'glucose']:
-        for metric in range(1, 9):
-            print(Metric(metric))
-            sim.plot_metrics(Metric(metric), 350, 100, image_type, range(25))
+    for image_type in ['cells_densities', 'oxygen', 'glucose']:
+        sim.plot_metrics(Metric.CONTINUOUS_MUTUAL_INFORMATION, 350, 100, image_type, range(25))

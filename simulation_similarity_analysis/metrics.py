@@ -4,6 +4,7 @@ import math
 import numpy as np
 from scipy import signal
 from sklearn.metrics import normalized_mutual_info_score
+from sklearn.feature_selection import mutual_info_regression
 
 
 def ssim_function(image1, image2):
@@ -35,6 +36,7 @@ class Metric(Enum):
     CORRELATION = 6
     DICE = 7
     MUTUAL_INFORMATION = 8
+    CONTINUOUS_MUTUAL_INFORMATION = 9
 
     def __str__(self):
         if self == Metric.IMAGE_ABSOLUTE_DIFFERENCE:
@@ -55,6 +57,8 @@ class Metric(Enum):
             return "sørensen–Dice coefficient "
         elif self == Metric.MUTUAL_INFORMATION:
             return "mutual information"
+        elif self == Metric.CONTINUOUS_MUTUAL_INFORMATION:
+            return "continuous mutual information"
 
     def get_function(self):
         if self == Metric.IMAGE_ABSOLUTE_DIFFERENCE:
@@ -75,3 +79,5 @@ class Metric(Enum):
             return dice_function
         elif self == Metric.MUTUAL_INFORMATION:
             return lambda a, b: normalized_mutual_info_score(a.flatten(), b.flatten())
+        elif self == Metric.CONTINUOUS_MUTUAL_INFORMATION:
+            return lambda a, b: mutual_info_regression(np.array([a.flatten()]).transpose(), b.flatten())[0]
