@@ -6,6 +6,7 @@ from multiprocessing import Pool
 import os
 import pandas as pd
 import random
+from skimage.metrics import structural_similarity
 
 PARAMETER_DATA = pd.read_csv(os.path.join("simulation", "parameter_data.csv"), index_col=0)
 MIN_PRED = 0
@@ -192,17 +193,22 @@ class Comparison:
             image_type: {timestep: np.std(prediction_metrics[image_type][timestep]) for timestep in self.timesteps} for
             image_type in self.image_types}
 
-        fig, axis = plt.subplots(4, 2, figsize=(12,16))
+        fig, axis = plt.subplots(4, 1, figsize=(12, 16))
         fig.suptitle(f"Inherent and Predicted {metricsName}")
         for i, image_type in enumerate(self.image_types):
-            axis[i, 0].plot(self.timesteps, inherent_metrics_mean[image_type].values(), label="Inherent")
-            axis[i, 0].plot(self.timesteps, prediction_metrics_mean[image_type].values(), label="Prediction")
-            axis[i, 0].set_title(f"Mean metric for {image_type}")
-            axis[i, 1].plot(self.timesteps, inherent_metrics_std[image_type].values(), label="Inherent")
-            axis[i, 1].plot(self.timesteps, prediction_metrics_std[image_type].values(), label="Prediction")
-            axis[i, 1].set_title(f"Std metric for {image_type}")
-            axis[i, 0].legend()
-            axis[i, 1].legend()
+            inherent_mean = np.array(list(inherent_metrics_mean[image_type].values()))
+            prediction_mean = np.array(list(prediction_metrics_mean[image_type].values()))
+            inherent_std = np.array(list(inherent_metrics_std[image_type].values()))
+            prediction_std = np.array(list(prediction_metrics_std[image_type].values()))
+
+            axis[i].plot(self.timesteps, inherent_mean, label="Inherent", color="blue")
+            axis[i].plot(self.timesteps, prediction_mean, label="Prediction", color="orange")
+            axis[i].set_title(f"Metric for {image_type}")
+            axis[i].fill_between(self.timesteps, inherent_mean - inherent_std, inherent_mean + inherent_std,
+                                 color="blue", alpha=0.2)
+            axis[i].fill_between(self.timesteps, prediction_mean - prediction_std, prediction_mean + prediction_std,
+                                 color="orange", alpha=0.2)
+            axis[i].legend()
         plt.savefig(filename)
 
 
@@ -213,6 +219,12 @@ def corr_hist_function(image1, image2):
     hist2, bins2 = np.histogram(image2, bins=np.linspace(min_value, max_value + 1, bins))
     return np.corrcoef(hist1, hist2)[0, 1]
 
+
+def ssim_function(image1, image2):
+    min_value, max_value = min(np.min(image1), np.min(image2)), max(np.max(image1), np.max(image2))
+    return structural_similarity(image1, image2, full=True, data_range=max_value - min_value)[0]
+
+
 if __name__ == '__main__':
-    comparator = Comparison("config3_full", 5, 1200)
-    comparator.plot_metrics(3, "Histogram Correlation",corr_hist_function, "histo_corr.png")
+    comparator = Comparison("config4_full", 5, 1200)
+    comparator.plot_metrics(3, "histo", corr_hist_function, "new_histo.png")
