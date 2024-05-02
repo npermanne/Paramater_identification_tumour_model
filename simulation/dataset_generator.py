@@ -1,3 +1,5 @@
+import re
+from collections import Counter
 from simulation import Simulation
 from simulation import DEFAULT_PARAMETERS
 from enum import Enum
@@ -96,9 +98,11 @@ class DatasetGenerator:
                     parameters[nameRow] = np.full(self.n_samples, float(row["Default Value"]))
             else:
                 if row["Type"] == "int":
-                    parameters[nameRow] = np.random.randint(low=int(row["Minimum"]), high=int(row["Maximum"])+1, size=self.n_samples)
+                    parameters[nameRow] = np.random.randint(low=int(row["Minimum"]), high=int(row["Maximum"]) + 1,
+                                                            size=self.n_samples)
                 else:
-                    parameters[nameRow] = np.random.uniform(low=float(row["Minimum"]), high=float(row["Maximum"]), size=self.n_samples)
+                    parameters[nameRow] = np.random.uniform(low=float(row["Minimum"]), high=float(row["Maximum"]),
+                                                            size=self.n_samples)
         return parameters
 
     def generate_dataset(self):
@@ -124,7 +128,7 @@ class DatasetGenerator:
                                                                                (self.n_samples - index - 1) * np.mean(
                                                                                    times)), end='\r')
 
-    def generate_dataset_multi_process(self, process_number: int, chunksize: int):
+    def generate_dataset_multi_process(self, process_number: int):
         general_path = os.path.join(DATASET_FOLDER_PATH, self.name)
         if not os.path.exists(general_path):
             os.makedirs(general_path)
@@ -146,9 +150,17 @@ class DatasetGenerator:
         pool = Pool(process_number)
         pool.map(generate, range(df.shape[0]))
 
-    def generate_missing(self):
+    def generate_missing_multi_process(self, process_number: int):
         general_path = os.path.join(DATASET_FOLDER_PATH, self.name)
-        df = pd.read_csv(os.path.join(general_path, DATASET_FILE_NAME))
+        df = pd.read_csv(os.path.join(general_path, DATASET_FILE_NAME), index_col=0)
+        all_files = os.listdir(general_path)
+        all_files.remove(DATASET_FILE_NAME)
+        pattern = r'image(\d+)_type=(\w+)_time=(\d+)\.npy'
+        samples = Counter([re.findall(pattern, file)[0][0] for file in all_files])
+        missing_samples = [sample for sample in range(self.n_samples) if samples.get(str(sample), 0) != self.n_draw*4]
+
+
+        global generate
 
         def generate(i):
             row = df.iloc[i]
@@ -159,15 +171,22 @@ class DatasetGenerator:
                     np.save(path, matrix)
             print(f"Sample {i} done !")
 
-        generate(384)
+
+        pool = Pool(process_number)
+        pool.map(generate, missing_samples)
+
 
 
 if __name__ == '__main__':
     parameter_data_file = os.path.join("simulation", "parameter_data.csv")
-    dataset_generator = DatasetGenerator((64, 64), 350, 100, 8, parameter_data_file, [], 100,
-                                         "same_value_study")
+    param_interest = [
+        "average_healthy_glucose_absorption",
+        "average_cancer_glucose_absorption",
+        "average_healthy_oxygen_consumption",
+        "average_cancer_oxygen_consumption",
+        "cell_cycle"
+    ]
+    dataset_generator = DatasetGenerator((64, 64), 350, 100, 8, parameter_data_file, param_interest, 3200,
+                                         "full_dataset")
 
-    # print(dataset_generator.generate_parameters())
-    dataset_generator.generate_dataset_multi_process(12, 1)
-    # dataset_generator.generate_missing()
-
+    dataset_generator.generate_missing_multi_process(12)
