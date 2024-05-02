@@ -7,6 +7,7 @@ from skimage.metrics import structural_similarity
 import math
 from enum import Enum
 from multiprocessing import Pool
+from metrics import Metric
 
 PARAMETERS = [
     "sources",
@@ -47,29 +48,6 @@ def find_value_pairs(a: np.array, difference, tol):
     indices = np.argwhere(mask)
     indices = indices[indices[:, 0] <= indices[:, 1]]
     return a[indices]
-
-
-class Metric(Enum):
-    IMAGE_ABSOLUTE_DIFFERENCE = 'image absolute difference'
-    CORRELATION_HISTOGRAM = 'correlation histogram'
-    SSIM = 'ssim'
-    MEAN_ABSOLUTE_ERROR = 'mean_absolute_error'
-    ROOT_MEAN_SQUARED_ERROR = 'root_mean_squared_error'
-    MAX_ABSOLUTE_ERROR = 'max_absolute_error'
-
-    def __str__(self):
-        if self == Metric.IMAGE_ABSOLUTE_DIFFERENCE:
-            return "image absolute difference"
-        elif self == Metric.CORRELATION_HISTOGRAM:
-            return "histogram correlation"
-        elif self == Metric.SSIM:
-            return "ssim index"
-        elif self == Metric.MEAN_ABSOLUTE_ERROR:
-            return "mean absolute error"
-        elif self == Metric.ROOT_MEAN_SQUARED_ERROR:
-            return "root mean squared error"
-        elif self == Metric.MAX_ABSOLUTE_ERROR:
-            return "max absolute error"
 
 
 class Comparator:
@@ -149,38 +127,7 @@ class Comparator:
         image2 = crop(self.get_item(i2, draw, image_type)[0], percentage=crop_percentage)
         return compare_function(image1, image2)
 
-    def diff(self, i1, i2, draw: int, image_type: str, crop_percentage=0.5):
-        return self.compare(lambda a, b: np.absolute(a - b), i1, i2, draw, image_type, crop_percentage=crop_percentage)
-
-    def corr_hist(self, i1, i2, draw: int, image_type: str, bins=100, crop_percentage=0.5):
-        def corr_hist_function(image1, image2):
-            min_value, max_value = min(np.min(image1), np.min(image2)), max(np.max(image1), np.max(image2))
-            hist1, bins1 = np.histogram(image1, bins=np.linspace(min_value, max_value + 1, bins))
-            hist2, bins2 = np.histogram(image2, bins=np.linspace(min_value, max_value + 1, bins))
-            return np.corrcoef(hist1, hist2)[0, 1]
-
-        return self.compare(corr_hist_function, i1, i2, draw, image_type, crop_percentage=crop_percentage)
-
-    def ssim(self, i1, i2, draw: int, image_type: str, crop_percentage=0.5):
-        def ssim_function(image1, image2):
-            min_value, max_value = min(np.min(image1), np.min(image2)), max(np.max(image1), np.max(image2))
-            return structural_similarity(image1, image2, full=True, data_range=max_value - min_value)[0]
-
-        return self.compare(ssim_function, i1, i2, draw, image_type, crop_percentage=crop_percentage)
-
-    def mean_absolute_error(self, i1, i2, draw: int, image_type: str, crop_percentage=0.5):
-        return self.compare(lambda a, b: np.abs(a - b).mean(), i1, i2, draw, image_type,
-                            crop_percentage=crop_percentage)
-
-    def root_mean_squared_error(self, i1, i2, draw: int, image_type: str, crop_percentage=0.5):
-        return self.compare(lambda a, b: math.sqrt(np.square(a - b).mean()), i1, i2, draw, image_type,
-                            crop_percentage=crop_percentage)
-
-    def max_absolute_error(self, i1, i2, draw: int, image_type: str, crop_percentage=0.5):
-        return self.compare(lambda a, b: np.max(np.absolute(a - b)), i1, i2, draw, image_type,
-                            crop_percentage=crop_percentage)
-
-    def mean_difference(self, metric: Metric, draw: int, image_type: str, parameter: str, difference: float, tol: float,
+    def mean_and_std_difference(self, metric: Metric, draw: int, image_type: str, parameter: str, difference: float, tol: float,
                         process_number: int, iteration: int, crop_percentage=0.5):
         all_possible_values = self.get_possible_values(parameter)
         different_pairs = find_value_pairs(all_possible_values, difference, tol)
@@ -198,48 +145,16 @@ class Comparator:
         random_indices = np.random.choice(len(all_indexes_pairs), size=iteration, replace=True)
         all_indexes_pairs = all_indexes_pairs[random_indices]
 
-        global metric1
-        global metric2
-        global metric3
-        global metric4
-        global metric5
-        global metric6
+        global function
 
-        def metric1(a):
-            return self.diff(a[0], a[1], draw, image_type, crop_percentage=crop_percentage)
-
-        def metric2(a):
-            return self.corr_hist(a[0], a[1], draw, image_type, crop_percentage=crop_percentage)
-
-        def metric3(a):
-            return self.ssim(a[0], a[1], draw, image_type, crop_percentage=crop_percentage)
-
-        def metric4(a):
-            return self.mean_absolute_error(a[0], a[1], draw, image_type, crop_percentage=crop_percentage)
-
-        def metric5(a):
-            return self.root_mean_squared_error(a[0], a[1], draw, image_type, crop_percentage=crop_percentage)
-
-        def metric6(a):
-            return self.max_absolute_error(a[0], a[1], draw, image_type, crop_percentage=crop_percentage)
+        def function(a):
+            return self.compare(metric.get_function(), a[0], a[1], draw, image_type, crop_percentage=crop_percentage)
 
         results = None
         with Pool(processes=process_number) as pool:
-            match metric:
-                case Metric.IMAGE_ABSOLUTE_DIFFERENCE:
-                    results = pool.map(metric1, all_indexes_pairs)
-                case Metric.CORRELATION_HISTOGRAM:
-                    results = pool.map(metric2, all_indexes_pairs)
-                case Metric.SSIM:
-                    results = pool.map(metric3, all_indexes_pairs)
-                case Metric.MEAN_ABSOLUTE_ERROR:
-                    results = pool.map(metric4, all_indexes_pairs)
-                case Metric.ROOT_MEAN_SQUARED_ERROR:
-                    results = pool.map(metric5, all_indexes_pairs)
-                case Metric.MAX_ABSOLUTE_ERROR:
-                    results = pool.map(metric6, all_indexes_pairs)
+            results = pool.map(function, all_indexes_pairs)
 
-        return np.mean(results, axis=0)
+        return np.mean(results, axis=0), np.std(results, axis=0)
 
 
 if __name__ == '__main__':
