@@ -1,12 +1,12 @@
 ,Default Value,Minimum,Maximum,Type
 sources, 100,,,int
-average_healthy_glucose_absorption, .36,0,0.72,float
-average_cancer_glucose_absorption, .54,0,1.08,float
-average_healthy_oxygen_consumption, 20,0,40,float
-average_cancer_oxygen_consumption, 20,0,40,float
+average_healthy_glucose_absorption, .36,0.144,0.576,float
+average_cancer_glucose_absorption, .54,0.216,0.864,float
+average_healthy_oxygen_consumption, 20,8,32,float
+average_cancer_oxygen_consumption, 20,8,32,float
 quiescent_multiplier,2,,,float
 critical_multiplier,0.75,,,float
-cell_cycle,24,12,36,int
+cell_cycle,24,10,38,int
 radiosensitivity_G1, 1,,,float
 radiosensitivity_S, .75,,,float
 radiosensitivity_G2, 1.25,,,float
