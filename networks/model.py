@@ -101,11 +101,8 @@ class Network:
         self.network = Net(self.param_architecture).to(self.device)
 
         # TRAINING PARAMETERS
-        self.optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate)
+        self.optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate, weight_decay=1e-5)
         self.criterion = nn.MSELoss()
-        patience = param["TRAINING"].get("EARLY_STOPPING_PATIENCE", 10)
-        delta = param["TRAINING"].get("EARLY_STOPPING_DELTA", 0.2)
-        self.early_stopper = EarlyStopper(patience, delta)
 
     def __str__(self):
         # (Batch Size, n_draws, n_types, Height,  Width)
@@ -159,10 +156,6 @@ class Network:
             validation_losses[iter_epoch] = running_validation_loss / (iter_val + 1)
 
             if epoch_variable is not None: epoch_variable.set((iter_epoch + 1) / self.epochs * 100)
-
-            if self.early_stopper(running_validation_loss):
-                print("Early stop")
-                break
         print("Finished")
         # SAVE WEIGHT
         torch.save(self.network.state_dict(), self.path_weight)
