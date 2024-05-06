@@ -56,7 +56,7 @@ class DatasetGenerator:
     """
 
     def __init__(self, img_size, start_draw, interval, n_draw, parameter_data_file, parameters_of_interest, n_samples,
-                 name):
+                 name, treatment=None):
         self.img_size = img_size
         self.start_draw = start_draw
         self.interval = interval
@@ -66,10 +66,11 @@ class DatasetGenerator:
         self.n_samples = n_samples
         self.name = DATASET_FOLDER_NAME.format(name, self.start_draw, self.interval, self.n_draw, self.img_size[0],
                                                self.img_size[1])
+        self.treatment = treatment
 
     def generate_sample(self, parameter, color_type=True):
         sample = {}
-        simu = Simulation(self.img_size[0], self.img_size[1], parameter)
+        simu = Simulation(self.img_size[0], self.img_size[1], parameter, self.treatment)
         simu.cycle(self.start_draw)
         for i in range(self.n_draw):
             sample[self.start_draw + i * self.interval] = {CELLS_TYPES: simu.get_cells_type(color=color_type),
@@ -157,8 +158,7 @@ class DatasetGenerator:
         all_files.remove(DATASET_FILE_NAME)
         pattern = r'image(\d+)_type=(\w+)_time=(\d+)\.npy'
         samples = Counter([re.findall(pattern, file)[0][0] for file in all_files])
-        missing_samples = [sample for sample in range(self.n_samples) if samples.get(str(sample), 0) != self.n_draw*4]
-
+        missing_samples = [sample for sample in range(self.n_samples) if samples.get(str(sample), 0) != self.n_draw * 4]
 
         global generate
 
@@ -171,14 +171,16 @@ class DatasetGenerator:
                     np.save(path, matrix)
             print(f"Sample {i} done !")
 
-
         pool = Pool(process_number)
         pool.map(generate, missing_samples)
 
 
-
 if __name__ == '__main__':
-    parameter_data_file = os.path.join("simulation", "parameter_data.csv")
+    dose_hours = list(range(350, 1300, 24))
+    default_treatment = np.zeros(1300)
+    default_treatment[dose_hours] = 2
+
+    parameter_data_file_path = os.path.join("simulation", "parameter_data.csv")
     param_interest = [
         "average_healthy_glucose_absorption",
         "average_cancer_glucose_absorption",
@@ -186,7 +188,7 @@ if __name__ == '__main__':
         "average_cancer_oxygen_consumption",
         "cell_cycle"
     ]
-    dataset_generator = DatasetGenerator((64, 64), 350, 100, 8, parameter_data_file, param_interest, 3200,
-                                         "full_dataset")
+    dataset_generator = DatasetGenerator((64, 64), 350, 100, 8, parameter_data_file_path, param_interest, 3200,
+                                         "full_treatment_dataset", treatment=default_treatment)
 
     dataset_generator.generate_missing_multi_process(12)
