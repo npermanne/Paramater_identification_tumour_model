@@ -12,11 +12,11 @@ SIMILARITY_ANALYSIS_FOLDER = "simulation_similarity_analysis"
 
 
 class SimilarityAnalysis:
-    def __init__(self, parameter, tol, *dataset):
+    def __init__(self, folder_name, parameter, tol, *dataset):
         self.comparator = Comparator(*dataset)
         self.parameter = parameter
         self.tol = tol
-        self.path = os.path.join(SIMILARITY_ANALYSIS_FOLDER, f"{parameter}_analysis")
+        self.path = os.path.join(SIMILARITY_ANALYSIS_FOLDER, f"{folder_name}_analysis")
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
@@ -59,6 +59,4 @@ class SimilarityAnalysis:
 
 
 if __name__ == '__main__':
-    sim = SimilarityAnalysis("cell_cycle", 0, "full_dataset_start=350_interval=100_ndraw=8_size=(64,64)")
-    for image_type in ['cells_densities', 'oxygen', 'glucose']:
-        sim.plot_metrics(Metric.CONTINUOUS_MUTUAL_INFORMATION, 350, 100, image_type, range(25))
+    print("hello")

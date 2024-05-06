@@ -251,4 +251,9 @@ def make_gif(parameter, iteration, step, interval, filename, treatment=None):
 
 
 if __name__ == '__main__':
-    make_gif(DEFAULT_PARAMETERS, 240, 5, 25, "bob.gif")
+    dose_hours = list(range(350, 1300, 24))
+    default_treatment = np.zeros(1300)
+    default_treatment[dose_hours] = 2
+
+    make_gif(DEFAULT_PARAMETERS, 240, 5, 50, "simu_with_treatment.gif", treatment=default_treatment)
+    make_gif(DEFAULT_PARAMETERS, 240, 5, 50, "simu_without_treatment.gif")
