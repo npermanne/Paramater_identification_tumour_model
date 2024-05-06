@@ -1,0 +1,24 @@
+DATASET:
+  FOLDER_NAME: full_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)
+  IMG_TYPES:
+  - cells_types
+  - cells_densities
+  - oxygen
+  - glucose
+  N_DRAWS: 1
+  PARAMETERS_OF_INTEREST:
+  - average_healthy_glucose_absorption
+  - average_cancer_glucose_absorption
+  - average_healthy_oxygen_consumption
+  - average_cancer_oxygen_consumption
+  - cell_cycle
+MODEL:
+  CONV_LAYERS: 3
+  INPUT_LSTM: 1000
+  LSTM_LAYERS: 1
+  OUTPUT_LSTM: 1000
+TRAINING:
+  BATCH_SIZE: 16
+  DEVICE: cpu
+  EPOCH: 300
+  LEARNING_RATE: 1.0e-05
