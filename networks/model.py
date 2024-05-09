@@ -191,6 +191,7 @@ class Network:
             predicted = self.network.forward(test_inputs)
 
             # Add evaluation data
+            predicted, test_outputs_scaled = predicted.cpu(), test_outputs_scaled.cpu()
             for i in range(len(test_outputs_scaled)):
                 evaluation_data.loc[len(evaluation_data.index)] = np.concatenate((predicted.detach().numpy()[i], test_outputs_scaled.numpy()[i]))
 
