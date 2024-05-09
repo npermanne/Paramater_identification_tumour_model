@@ -102,7 +102,7 @@ class Network:
         self.network = Net(self.param_architecture).to(self.device)
 
         # TRAINING PARAMETERS
-        self.optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate, weight_decay=1e-5)
+        self.optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate)
         self.criterion = nn.MSELoss()
 
     def __str__(self):
