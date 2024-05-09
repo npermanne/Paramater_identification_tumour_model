@@ -15,4 +15,3 @@ Below are all the configuration parameter:
   - `LEARNING_RATE`: Not use
   - `EPOCH`: Number of epoch of training
   - `BATCH_SIZE`: Batch size for training
-  - `DEVICE`: cpu or cuda

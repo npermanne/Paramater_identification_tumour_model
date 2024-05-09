@@ -97,7 +97,8 @@ class Network:
             "LSTM_LAYERS": param["MODEL"]["LSTM_LAYERS"],
             "CONV_LAYERS": param["MODEL"]["CONV_LAYERS"]
         }
-        self.device = torch.device(param["TRAINING"]["DEVICE"])
+
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.network = Net(self.param_architecture).to(self.device)
 
         # TRAINING PARAMETERS
@@ -126,6 +127,7 @@ class Network:
             running_loss = 0
             for iter_train, data in enumerate(self.train_dataloader):
                 inputs, outputs, outputs_scaled = data
+                inputs, outputs, outputs_scaled = inputs.to(self.device), outputs.to(self.device), outputs_scaled.to(self.device)
                 # Forward Pass
                 predicted = self.network.forward(inputs)
                 loss = self.criterion(predicted, outputs_scaled)
@@ -145,6 +147,7 @@ class Network:
             with torch.no_grad():
                 for iter_val, data in enumerate(self.val_dataloader):
                     validation_inputs, validation_outputs, validation_outputs_scaled = data
+                    validation_inputs, validation_outputs, validation_outputs_scaled = validation_inputs.to(self.device), validation_outputs.to(self.device), validation_outputs_scaled.to(self.device)
 
                     # Forward Pass
                     predicted = self.network.forward(validation_inputs)
@@ -182,6 +185,7 @@ class Network:
         differences = None
         for iter_test, data in enumerate(self.test_dataloader):
             test_inputs, test_outputs, test_outputs_scaled = data
+            test_inputs, test_outputs, test_outputs_scaled = test_inputs.to(self.device), test_outputs.to(self.device), test_outputs_scaled.to(self.device)
 
             # Forward Pass
             predicted = self.network.forward(test_inputs)
