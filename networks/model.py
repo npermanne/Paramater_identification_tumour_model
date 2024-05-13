@@ -104,7 +104,7 @@ class Network:
         # TRAINING
         self.optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate, weight_decay=param["TRAINING"]["L2_REGULARIZATION"])
         self.criterion = nn.MSELoss()
-        self.early_stopper = EarlyStopper(patience=param["TRAINING"]["EARLY_STOPPING_PATIENCE"], min_delta=param["TRAINING"]["MIN_DELTA"])
+        self.early_stopper = EarlyStopper(patience=param["TRAINING"]["EARLY_STOPPING_PATIENCE"], min_delta=param["TRAINING"]["EARLY_STOPPING_MIN_DELTA"])
 
     def __str__(self):
         # (Batch Size, n_draws, n_types, Height,  Width)
