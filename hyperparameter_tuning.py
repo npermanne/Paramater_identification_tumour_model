@@ -29,7 +29,6 @@ class HyperparameterTuning:
         config["TRAINING"]["EPOCH"] = self.n_epoch
         config["TRAINING"]["EARLY_STOPPING_DELTA"] = self.early_stopping_delta
         config["TRAINING"]["EARLY_STOPPING_PATIENCE"] = self.early_stopping_patience
-        config["TRAINING"]["DEVICE"] = "cpu"
 
         start = time.time()
         network = Network(config)
@@ -83,5 +82,5 @@ if __name__ == '__main__':
         "BATCH_SIZE": [1, 2, 4, 8, 16, 32, 64]
     }
 
-    my_tuning = HyperparameterTuning("random_search_1", my_task, my_hyperparameters, 50, 10, 0.001)
+    my_tuning = HyperparameterTuning("random_search_1", my_task, my_hyperparameters, 300, 10, 0.001)
     my_tuning.random_search(30)

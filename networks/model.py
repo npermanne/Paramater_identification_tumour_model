@@ -101,9 +101,10 @@ class Network:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.network = Net(self.param_architecture).to(self.device)
 
-        # TRAINING PARAMETERS
-        self.optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate)
+        # TRAINING
+        self.optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate, weight_decay=param["TRAINING"]["L2_REGULARIZATION"])
         self.criterion = nn.MSELoss()
+        self.early_stopper = EarlyStopper(patience=param["TRAINING"]["EARLY_STOPPING_PATIENCE"], min_delta=param["TRAINING"]["MIN_DELTA"])
 
     def __str__(self):
         # (Batch Size, n_draws, n_types, Height,  Width)
@@ -159,6 +160,10 @@ class Network:
             validation_losses[iter_epoch] = running_validation_loss / (iter_val + 1)
 
             if epoch_variable is not None: epoch_variable.set((iter_epoch + 1) / self.epochs * 100)
+
+            if self.early_stopper.early_stop(validation_losses[iter_epoch]):
+                print("Early stopped")
+                break
         print("Finished")
         # SAVE WEIGHT
         torch.save(self.network.state_dict(), self.path_weight)
