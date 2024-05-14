@@ -28,7 +28,7 @@ class HyperparameterTuning:
         config["TRAINING"]["BATCH_SIZE"] = params["BATCH_SIZE"]
         config["TRAINING"]["EPOCH"] = self.n_epoch
         config["TRAINING"]["L2_REGULARIZATION"] = params["L2_REGULARIZATION"]
-        config["TRAINING"]["EARLY_STOPPING_DELTA"] = self.early_stopping_delta
+        config["TRAINING"]["EARLY_STOPPING_MIN_DELTA"] = self.early_stopping_delta
         config["TRAINING"]["EARLY_STOPPING_PATIENCE"] = self.early_stopping_patience
 
         start = time.time()
