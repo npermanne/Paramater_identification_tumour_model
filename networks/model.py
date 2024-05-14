@@ -9,7 +9,10 @@ import torch.nn as nn
 import os
 import pandas as pd
 from torchinfo import summary
-from tkinter import *
+try:
+    from tkinter import *
+except ModuleNotFoundError:
+    pass
 
 # Random Seed
 np.random.seed(2990)
