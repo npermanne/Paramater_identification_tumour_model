@@ -24,6 +24,9 @@ class Net(nn.Module):
         self.n_params = param["N_PARAMS"]
         self.convolution_layers = param["CONV_LAYERS"]
 
+        if self.lstm_layers == 0:
+            self.input_LSTM = self.output_LSTM
+
         # --------------------------------------------------------------------------------------
         # CNN
 
@@ -46,7 +49,8 @@ class Net(nn.Module):
         # LSTM
 
         # size: (input_LSTM)
-        self.lstm = nn.LSTM(self.input_LSTM, self.output_LSTM, batch_first=True, num_layers=self.lstm_layers)
+        if self.lstm_layers > 0:
+            self.lstm = nn.LSTM(self.input_LSTM, self.output_LSTM, batch_first=True, num_layers=self.lstm_layers)
         # size: (output_LSTM)
 
         # --------------------------------------------------------------------------------------
@@ -69,7 +73,8 @@ class Net(nn.Module):
         # (Batch Size x n_draws, 16/2^(conv_layer-1) x Height x Width)
         x = F.relu(self.linear1(x))
         # (Batch Size, n_draws, input_LSTM)
-        x, (h, c) = self.lstm(x)
+        if self.lstm_layers > 0:
+            x, (h, c) = self.lstm(x)
         # (Batch Size, n_draws, output_LSTM)
         x = x.reshape(self.batch_size, self.n_draws * self.output_LSTM)
         # (Batch Size, n_draws * output_LSTM)
