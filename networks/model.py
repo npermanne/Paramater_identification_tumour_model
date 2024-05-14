@@ -174,9 +174,9 @@ class Network:
         # PLOT PERFORMANCE CURVE
         plt.switch_backend('agg')
         plt.cla()
-        X = np.arange(self.epochs)
-        plt.plot(X, losses, label="Training Loss")
-        plt.plot(X, validation_losses, label="Validation Loss")
+        X = np.arange(iter_epoch+1)
+        plt.plot(X, losses[:iter_epoch+1], label="Training Loss")
+        plt.plot(X, validation_losses[:iter_epoch+1], label="Validation Loss")
         plt.xlabel("Epoch")
         plt.ylabel("Loss")
         plt.legend()
