@@ -98,7 +98,8 @@ class Network:
             "WIDTH": self.train_dataset.get_width(),
             "N_PARAMS": len(param["DATASET"]["PARAMETERS_OF_INTEREST"]),
             "LSTM_LAYERS": param["MODEL"]["LSTM_LAYERS"],
-            "CONV_LAYERS": param["MODEL"]["CONV_LAYERS"]
+            "CONV_LAYERS": param["MODEL"]["CONV_LAYERS"],
+            "FEED_FORWARD": param["MODEL"]["FEED_FORWARD"]
         }
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

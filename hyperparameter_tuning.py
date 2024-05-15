@@ -24,6 +24,7 @@ class HyperparameterTuning:
         config["MODEL"]["OUTPUT_LSTM"] = params["OUTPUT_LSTM"]
         config["MODEL"]["LSTM_LAYERS"] = params["LSTM_LAYERS"]
         config["MODEL"]["CONV_LAYERS"] = params["CONV_LAYERS"]
+        config["MODEL"]["FEED_FORWARD"] = params["FEED_FORWARD"]
         config["TRAINING"]["LEARNING_RATE"] = params["LEARNING_RATE"]
         config["TRAINING"]["BATCH_SIZE"] = params["BATCH_SIZE"]
         config["TRAINING"]["EPOCH"] = self.n_epoch
@@ -45,6 +46,7 @@ class HyperparameterTuning:
         for i in range(iteration):
             random_param = {key: random.choice(self.hyperparameters[key]) for key in self.hyperparameters.keys()}
             self.execute_once(i, random_param)
+            print(f"Random search {i} done")
 
         self.results.to_csv(os.path.join("results", self.tuning_name, "performances.csv"))
 
@@ -63,10 +65,11 @@ if __name__ == '__main__':
         "OUTPUT_LSTM": [100, 200, 500, 1000],
         "LSTM_LAYERS": [0, 1, 2, 3],
         "CONV_LAYERS": [1, 2, 3, 4],
+        "FEED_FORWARD": [0, 100, 200, 500, 1000],
         "LEARNING_RATE": [5e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3],
         "BATCH_SIZE": [1, 2, 4, 8, 16, 32, 64],
         "L2_REGULARIZATION": [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
     }
 
-    my_tuning = HyperparameterTuning("random_search_1", my_task, my_hyperparameters, 300, 10, 0.001)
-    my_tuning.random_search(30)
+    my_tuning = HyperparameterTuning("random_search_2", my_task, my_hyperparameters, 300, 10, 0.001)
+    my_tuning.random_search(60)

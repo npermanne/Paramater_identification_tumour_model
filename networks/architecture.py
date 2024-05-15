@@ -23,6 +23,7 @@ class Net(nn.Module):
         self.width = param["WIDTH"]
         self.n_params = param["N_PARAMS"]
         self.convolution_layers = param["CONV_LAYERS"]
+        self.feed_forward_size = param["FEED_FORWARD"]
 
         if self.lstm_layers == 0:
             self.input_LSTM = self.output_LSTM
@@ -58,7 +59,11 @@ class Net(nn.Module):
 
         # size: (n_draws, output_LSTM)
         # size: (n_draws x output_LSTM)
-        self.linear2 = nn.Linear(self.n_draws * self.output_LSTM, self.n_params)
+        self.sequential_linear = nn.Sequential()
+        if self.feed_forward_size > 0:
+            self.sequential_linear.append(nn.Linear(self.n_draws * self.output_LSTM, self.feed_forward_size))
+            self.sequential_linear.append(nn.ReLU())
+        self.sequential_linear.append(nn.Linear(self.n_draws * self.output_LSTM if self.feed_forward_size == 0 else self.feed_forward_size, self.n_params))
         # size: (n_params)
 
     def forward(self, x):
@@ -78,6 +83,6 @@ class Net(nn.Module):
         # (Batch Size, n_draws, output_LSTM)
         x = x.reshape(self.batch_size, self.n_draws * self.output_LSTM)
         # (Batch Size, n_draws * output_LSTM)
-        x = F.sigmoid(self.linear2(x))
+        x = F.sigmoid(self.sequential_linear(x))
         # (Batch Size, n_params)
         return x
