@@ -47,8 +47,7 @@ class HyperparameterTuning:
             random_param = {key: random.choice(self.hyperparameters[key]) for key in self.hyperparameters.keys()}
             self.execute_once(i, random_param)
             print(f"Random search {i} done")
-
-        self.results.to_csv(os.path.join("results", self.tuning_name, "performances.csv"))
+            self.results.to_csv(os.path.join("results", self.tuning_name, "performances.csv"))
 
 
 if __name__ == '__main__':
