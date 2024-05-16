@@ -41,13 +41,37 @@ class HyperparameterTuning:
         params["Performance"] = perf
         params["Time"] = end - start
         self.results.loc[idx] = params
+        self.results.to_csv(os.path.join("results", self.tuning_name, "performances.csv"))
+        print(f"Search {idx} done")
+        return perf
 
     def random_search(self, iteration):
         for i in range(iteration):
             random_param = {key: random.choice(self.hyperparameters[key]) for key in self.hyperparameters.keys()}
             self.execute_once(i, random_param)
-            print(f"Random search {i} done")
-            self.results.to_csv(os.path.join("results", self.tuning_name, "performances.csv"))
+
+    def local_search(self, n_restart, max_iter):
+        index = 0
+        for restart in range(n_restart):
+            current_best_param = {key: random.choice(self.hyperparameters[key]) for key in self.hyperparameters.keys()}
+            current_best_perf = self.execute_once(index, current_best_param)
+            index += 1
+            for _ in range(max_iter):
+                random_param_name = random.choice(list(self.hyperparameters.keys()))
+                current_index = self.hyperparameters[random_param_name].index(current_best_param[random_param_name])
+
+                param_upper = {key: (value if key != random_param_name else self.hyperparameters[random_param_name][current_index + 1]) for key, value in current_best_param.items()} if current_index + 1 < len(self.hyperparameters[random_param_name]) else None
+                param_lower = {key: (value if key != random_param_name else self.hyperparameters[random_param_name][current_index - 1]) for key, value in current_best_param.items()} if current_index - 1 >= 0 else None
+
+                perf_upper = self.execute_once(index, param_upper) if param_upper is not None else None
+                perf_lower = self.execute_once(index + 1, param_lower) if param_lower is not None else None
+                index += 2
+
+                current_best_perf = current_best_perf if perf_upper is None or current_best_param < perf_upper else perf_upper
+                current_best_param = current_best_param if perf_upper is None or current_best_param < perf_upper else param_upper
+
+                current_best_perf = current_best_perf if perf_lower is None or current_best_param < perf_lower else perf_lower
+                current_best_param = current_best_param if perf_lower is None or current_best_param < perf_lower else param_lower
 
 
 if __name__ == '__main__':
@@ -70,5 +94,5 @@ if __name__ == '__main__':
         "L2_REGULARIZATION": [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
     }
 
-    my_tuning = HyperparameterTuning("random_search_2", my_task, my_hyperparameters, 300, 10, 0.001)
-    my_tuning.random_search(60)
+    my_tuning = HyperparameterTuning("local_search_1", my_task, my_hyperparameters, 300, 10, 0.001)
+    my_tuning.local_search(10, 10)
