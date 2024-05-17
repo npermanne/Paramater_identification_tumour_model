@@ -67,11 +67,11 @@ class HyperparameterTuning:
                 perf_lower = self.execute_once(index + 1, param_lower) if param_lower is not None else None
                 index += 2
 
-                current_best_perf = current_best_perf if perf_upper is None or current_best_param < perf_upper else perf_upper
-                current_best_param = current_best_param if perf_upper is None or current_best_param < perf_upper else param_upper
+                current_best_perf = current_best_perf if perf_upper is None or current_best_perf < perf_upper else perf_upper
+                current_best_param = current_best_param if perf_upper is None or current_best_perf < perf_upper else param_upper
 
-                current_best_perf = current_best_perf if perf_lower is None or current_best_param < perf_lower else perf_lower
-                current_best_param = current_best_param if perf_lower is None or current_best_param < perf_lower else param_lower
+                current_best_perf = current_best_perf if perf_lower is None or current_best_perf < perf_lower else perf_lower
+                current_best_param = current_best_param if perf_lower is None or current_best_perf < perf_lower else param_lower
 
 
 if __name__ == '__main__':
