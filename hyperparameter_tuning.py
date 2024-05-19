@@ -65,7 +65,8 @@ class HyperparameterTuning:
 
                 perf_upper = self.execute_once(index, param_upper) if param_upper is not None else None
                 perf_lower = self.execute_once(index + 1, param_lower) if param_lower is not None else None
-                index += 2
+                index += 1 if perf_upper is not None else 0
+                index += 1 if perf_lower is not None else 0
 
                 current_best_perf = current_best_perf if perf_upper is None or current_best_perf < perf_upper else perf_upper
                 current_best_param = current_best_param if perf_upper is None or current_best_perf < perf_upper else param_upper
@@ -75,14 +76,6 @@ class HyperparameterTuning:
 
 
 if __name__ == '__main__':
-    my_task = {
-        "FOLDER_NAME": "full_dataset_start=350_interval=100_ndraw=8_size=(64,64)",
-        "N_DRAWS": 4,
-        "IMG_TYPES": ["cells_types", "cells_densities", "oxygen", "glucose"],
-        "PARAMETERS_OF_INTEREST": ["cell_cycle", "average_healthy_glucose_absorption",
-                                   "average_cancer_glucose_absorption",
-                                   "average_healthy_oxygen_consumption", "average_cancer_oxygen_consumption"]
-    }
     my_hyperparameters = {
         "INPUT_LSTM": [100, 200, 500, 1000],
         "OUTPUT_LSTM": [100, 200, 500, 1000],
@@ -94,5 +87,16 @@ if __name__ == '__main__':
         "L2_REGULARIZATION": [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
     }
 
-    my_tuning = HyperparameterTuning("local_search_1", my_task, my_hyperparameters, 300, 10, 0.001)
-    my_tuning.local_search(10, 10)
+    for i, dataset in enumerate(["full_dataset_start=350_interval=100_ndraw=8_size=(64,64)","full_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)"]):
+        for draw in range(1,9):
+            my_task = {
+                "FOLDER_NAME": dataset,
+                "N_DRAWS": draw,
+                "IMG_TYPES": ["cells_types", "cells_densities", "oxygen", "glucose"],
+                "PARAMETERS_OF_INTEREST": ["cell_cycle", "average_healthy_glucose_absorption",
+                                           "average_cancer_glucose_absorption",
+                                           "average_healthy_oxygen_consumption", "average_cancer_oxygen_consumption"]
+            }
+
+            my_tuning = HyperparameterTuning(f"random_search_{'treatment' if i==1 else 'without_treatment'}_draw={draw}", my_task, my_hyperparameters, 300, 10, 0.001)
+            my_tuning.random_search(20)
