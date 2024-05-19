@@ -11,7 +11,7 @@ if __name__ == '__main__':
     }
     training_dico = {
         "BATCH_SIZE": 1,
-        "EPOCHS": 300,
+        "EPOCH": 300,
         "LEARNING_RATE": 0.0001,
         "L2_REGULARIZATION": 0.001,
         "EARLY_STOPPING_MIN_DELTA": 0.001,
