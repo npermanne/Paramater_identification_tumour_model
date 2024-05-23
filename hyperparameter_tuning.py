@@ -87,7 +87,7 @@ if __name__ == '__main__':
         "L2_REGULARIZATION": [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
     }
 
-    for draw in range(1, 9):
+    for draw in range(2, 9):
         my_task = {
             "FOLDER_NAME": "full_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)",
             "N_DRAWS": draw,
