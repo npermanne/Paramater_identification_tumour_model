@@ -15,5 +15,5 @@ radiosensitivity_G0, .75,,,float
 source_glucose_supply, 130,,,int
 source_oxygen_supply, 4500,,,int
 glucose_diffuse_rate, 0.2,,,float
-oxygen_diffuse_rate, 0.2,,,float
+oxygen_diffuse_rate,0.2,,,float
 h_cells, 1000,,,int

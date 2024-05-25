@@ -460,3 +460,29 @@ def random_sources(xsize, ysize, number):
         if (x, y) not in src:
             src.append((x, y))
     return src
+
+
+if __name__ == '__main__':
+    radius = 15
+    x_size = 50
+    y_size = 50
+    center = (x_size // 2, y_size // 2)
+
+    dose = 2
+    radiation = np.zeros((x_size, y_size))
+    multiplicator = get_multiplicator(dose, radius)
+    for i in range(x_size):
+        for j in range(y_size):
+            dist = math.sqrt((center[0] - i) ** 2 + (center[1] - j) ** 2)
+            radiation[i, j] = scale(radius, dist, multiplicator)
+
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Circle
+
+    fig, ax = plt.subplots(1)
+    radiation = ax.matshow(radiation)
+    fig.colorbar(radiation)
+    ax.add_patch(Circle(center, radius, fill=False, color="red"))
+    ax.add_patch(Circle(center, 0.1, fill=True, color="red"))
+    plt.tight_layout()
+    plt.savefig("radiation_repartition.pdf")

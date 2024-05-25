@@ -126,7 +126,7 @@ class HealthyCell(Cell):
             self.alive = False
             HealthyCell.cell_count -= 1
         elif dose > 0.5:
-            self.repair += int(round(random.uniform(0, 2) * self.repair_time))
+                self.repair += int(round(random.uniform(0, 2) * self.repair_time))
 
     def cell_color(self):
         """RGB for the cell's color"""

@@ -1,10 +1,11 @@
-from grid import Grid
+from grid import Grid, get_multiplicator, scale
 from cell import HealthyCell, CancerCell, OARCell, Cell
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from enum import Enum
 import numpy as np
 import random
+import math
 
 DEFAULT_PARAMETERS = {
     "sources": 100,
@@ -248,7 +249,6 @@ def make_gif(parameter, iteration, step, interval, filename, treatment=None):
 
     anim_created = FuncAnimation(fig, anim_function, frames=iteration, interval=interval)
     anim_created.save(filename)
-
 
 if __name__ == '__main__':
     dose_hours = list(range(350, 1300, 24))
