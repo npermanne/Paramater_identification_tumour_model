@@ -5,6 +5,7 @@ from matplotlib.animation import FuncAnimation
 from enum import Enum
 import numpy as np
 import random
+import time
 import math
 
 DEFAULT_PARAMETERS = {
@@ -250,10 +251,29 @@ def make_gif(parameter, iteration, step, interval, filename, treatment=None):
     anim_created = FuncAnimation(fig, anim_function, frames=iteration, interval=interval)
     anim_created.save(filename)
 
+
 if __name__ == '__main__':
     dose_hours = list(range(350, 1300, 24))
     default_treatment = np.zeros(1300)
     default_treatment[dose_hours] = 2
 
-    make_gif(DEFAULT_PARAMETERS, 240, 5, 50, "simu_with_treatment.gif", treatment=default_treatment)
-    make_gif(DEFAULT_PARAMETERS, 240, 5, 50, "simu_without_treatment.gif")
+    time_planning = []
+    time_not_planning = []
+
+    for _ in range(10):
+        start = time.time()
+        simu = Simulation(64, 64, DEFAULT_PARAMETERS, treatment_planning=default_treatment)
+        simu.cycle(1200)
+        end = time.time()
+        time_planning.append(end - start)
+
+    for _ in range(10):
+        start = time.time()
+        simu = Simulation(64, 64, DEFAULT_PARAMETERS)
+        simu.cycle(1200)
+        end = time.time()
+        time_not_planning.append(end - start)
+
+    print(f"Mean time taken for the simulation of 1200 hours (with treatment planning): {np.mean(time_planning)}")
+    print(f"Mean time taken for the simulation of 1200 hours (without treatment planning): {np.mean(time_not_planning)}")
+
