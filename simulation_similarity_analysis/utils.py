@@ -127,8 +127,7 @@ class Comparator:
         image2 = crop(self.get_item(i2, draw, image_type)[0], percentage=crop_percentage)
         return compare_function(image1, image2)
 
-    def mean_and_std_difference(self, metric: Metric, draw: int, image_type: str, parameter: str, difference: float, tol: float,
-                        process_number: int, iteration: int, crop_percentage=0.5):
+    def mean_and_std_difference(self, metric: Metric, draw: int, image_type: str, parameter: str, difference: float, tol: float, process_number: int, iteration: int, crop_percentage=0.5):
         all_possible_values = self.get_possible_values(parameter)
         different_pairs = find_value_pairs(all_possible_values, difference, tol)
         all_indexes_pairs = None
@@ -144,7 +143,6 @@ class Comparator:
 
         random_indices = np.random.choice(len(all_indexes_pairs), size=iteration, replace=True)
         all_indexes_pairs = all_indexes_pairs[random_indices]
-
         global function
 
         def function(a):
