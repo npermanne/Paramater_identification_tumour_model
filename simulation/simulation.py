@@ -253,27 +253,30 @@ def make_gif(parameter, iteration, step, interval, filename, treatment=None):
 
 
 if __name__ == '__main__':
-    dose_hours = list(range(350, 1300, 24))
-    default_treatment = np.zeros(1300)
-    default_treatment[dose_hours] = 2
+    # dose_hours = list(range(350, 1300, 24))
+    # default_treatment = np.zeros(1300)
+    # default_treatment[dose_hours] = 2
+    #
+    # time_planning = []
+    # time_not_planning = []
+    #
+    # for _ in range(10):
+    #     start = time.time()
+    #     simu = Simulation(64, 64, DEFAULT_PARAMETERS, treatment_planning=default_treatment)
+    #     simu.cycle(1200)
+    #     end = time.time()
+    #     time_planning.append(end - start)
+    #
+    # for _ in range(10):
+    #     start = time.time()
+    #     simu = Simulation(64, 64, DEFAULT_PARAMETERS)
+    #     simu.cycle(1200)
+    #     end = time.time()
+    #     time_not_planning.append(end - start)
+    #
+    # print(f"Mean time taken for the simulation of 1200 hours (with treatment planning): {np.mean(time_planning)}")
+    # print(f"Mean time taken for the simulation of 1200 hours (without treatment planning): {np.mean(time_not_planning)}")
 
-    time_planning = []
-    time_not_planning = []
-
-    for _ in range(10):
-        start = time.time()
-        simu = Simulation(64, 64, DEFAULT_PARAMETERS, treatment_planning=default_treatment)
-        simu.cycle(1200)
-        end = time.time()
-        time_planning.append(end - start)
-
-    for _ in range(10):
-        start = time.time()
-        simu = Simulation(64, 64, DEFAULT_PARAMETERS)
-        simu.cycle(1200)
-        end = time.time()
-        time_not_planning.append(end - start)
-
-    print(f"Mean time taken for the simulation of 1200 hours (with treatment planning): {np.mean(time_planning)}")
-    print(f"Mean time taken for the simulation of 1200 hours (without treatment planning): {np.mean(time_not_planning)}")
+    for i in range(10):
+        make_gif(DEFAULT_PARAMETERS, 210, 5, 1, f"test{i}.gif" )
 

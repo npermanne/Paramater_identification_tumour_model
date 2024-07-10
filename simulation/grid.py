@@ -8,11 +8,12 @@ class CellList:
     """Used to hold lists of cells on each pixel while keeping cancer cells and healthy cells sorted
     """
 
-    def __init__(self):
+    def __init__(self, grid_observer):
         self.size = 0
         self.num_c_cells = 0
         self.cancer_cells = []
         self.healthy_cells = []
+        self.grid_observer = grid_observer
 
     def __iter__(self):
         """Needed to iterate on the list object"""
@@ -34,6 +35,7 @@ class CellList:
         if cell.cell_type() < 0:
             self.cancer_cells.append(cell)
             self.num_c_cells += 1
+            self.grid_observer.cancer_cells_count += 1
         else:
             self.healthy_cells.append(cell)
         self.size += 1
@@ -55,6 +57,7 @@ class CellList:
         """Delete dead cells from the list"""
         self.cancer_cells = [cell for cell in self.cancer_cells if cell.alive]
         self.healthy_cells = [cell for cell in self.healthy_cells if cell.alive]
+        self.grid_observer.cancer_cells_count -= (self.num_c_cells - len(self.cancer_cells))
         self.num_c_cells = len(self.cancer_cells)
         self.size = self.num_c_cells + len(self.healthy_cells)
 
@@ -135,7 +138,7 @@ class Grid:
         self.cells = np.empty((xsize, ysize), dtype=object)
         for i in range(xsize):
             for j in range(ysize):
-                self.cells[i, j] = CellList()
+                self.cells[i, j] = CellList(self)
 
         self.num_sources = sources
         self.sources = random_sources(xsize, ysize, sources)
@@ -161,6 +164,8 @@ class Grid:
         self.center_x = self.xsize // 2
         self.center_y = self.ysize // 2
 
+        self.cancer_cells_count = self.total_cancer_cells()
+
     def count_neighbors(self):
         """Compute the neigbour counts (the number of cells on neighbouring pixels) for each pixel"""
         for i in range(self.xsize):
@@ -177,7 +182,7 @@ class Grid:
 
     def source_move(self, x, y):
         """"Random walk of sources for angiogenesis"""
-        if random.randint(0, 50000) < CancerCell.cell_count:  # Move towards tumour center
+        if random.randint(0, 50000) < self.cancer_cells_count:  # Move towards tumour center
             if x < self.center_x:
                 x += 1
             elif x > self.center_x:
@@ -376,7 +381,7 @@ class Grid:
         return radius
 
     def tumor_radius(self, x, y):
-        if CancerCell.cell_count > 0:
+        if self.cancer_cells_count > 0:
             max_dist = -1
             for i in range(self.xsize):
                 for j in range(self.ysize):
@@ -420,7 +425,7 @@ class Grid:
                 self.neigh_counts[i, j] += v
 
     def compute_center(self):
-        if CancerCell.cell_count == 0:
+        if self.cancer_cells_count == 0:
             return -1, -1
         sum_x = 0
         sum_y = 0
@@ -437,6 +442,12 @@ class Grid:
         self.center_x = sum_x / count
         self.center_y = sum_y / count
 
+    def total_cancer_cells(self):
+        tot = 0
+        for i in range(self.xsize):
+            for j in range(self.ysize):
+                tot += self.cells[i, j].num_c_cells
+        return tot
 
 def conv(rad, x):
     denom = 3.8  # //sqrt(2) * 2.7
