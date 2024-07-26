@@ -2,9 +2,8 @@ from skimage.metrics import structural_similarity
 from enum import Enum
 import math
 import numpy as np
-from scipy import signal
-from sklearn.metrics import normalized_mutual_info_score
 from sklearn.feature_selection import mutual_info_regression
+from scipy.spatial.distance import euclidean, cosine
 
 
 def ssim_function(image1, image2):
@@ -26,7 +25,7 @@ def dice_function(image1, image2):
     return 2 * number_of_equal / (len(flatten_image1) * len(flatten_image2))
 
 
-class Metric(Enum):
+class SimilarityMetric(Enum):
     IMAGE_ABSOLUTE_DIFFERENCE = 0
     CORRELATION_HISTOGRAM = 1
     SSIM = 2
@@ -35,49 +34,59 @@ class Metric(Enum):
     MAX_ABSOLUTE_ERROR = 5
     CORRELATION = 6
     DICE = 7
-    MUTUAL_INFORMATION = 8
+    DISCRETE_MUTUAL_INFORMATION = 8
     CONTINUOUS_MUTUAL_INFORMATION = 9
+    EUCLIDEAN_DISTANCE = 10
+    COSINE_SIMILARITY = 11
 
     def __str__(self):
-        if self == Metric.IMAGE_ABSOLUTE_DIFFERENCE:
+        if self == SimilarityMetric.IMAGE_ABSOLUTE_DIFFERENCE:
             return "image absolute difference"
-        elif self == Metric.CORRELATION_HISTOGRAM:
+        elif self == SimilarityMetric.CORRELATION_HISTOGRAM:
             return "histogram correlation"
-        elif self == Metric.SSIM:
+        elif self == SimilarityMetric.SSIM:
             return "ssim index"
-        elif self == Metric.MEAN_ABSOLUTE_ERROR:
+        elif self == SimilarityMetric.MEAN_ABSOLUTE_ERROR:
             return "mean absolute error"
-        elif self == Metric.ROOT_MEAN_SQUARED_ERROR:
+        elif self == SimilarityMetric.ROOT_MEAN_SQUARED_ERROR:
             return "root mean squared error"
-        elif self == Metric.MAX_ABSOLUTE_ERROR:
+        elif self == SimilarityMetric.MAX_ABSOLUTE_ERROR:
             return "max absolute error"
-        elif self == Metric.CORRELATION:
+        elif self == SimilarityMetric.CORRELATION:
             return "correlation"
-        elif self == Metric.DICE:
+        elif self == SimilarityMetric.DICE:
             return "sørensen–Dice coefficient "
-        elif self == Metric.MUTUAL_INFORMATION:
-            return "mutual information"
-        elif self == Metric.CONTINUOUS_MUTUAL_INFORMATION:
+        elif self == SimilarityMetric.DISCRETE_MUTUAL_INFORMATION:
+            return "discrete mutual information"
+        elif self == SimilarityMetric.CONTINUOUS_MUTUAL_INFORMATION:
             return "continuous mutual information"
+        elif self == SimilarityMetric.EUCLIDEAN_DISTANCE:
+            return "euclidean distance"
+        elif self == SimilarityMetric.COSINE_SIMILARITY:
+            return "cosine similarity"
 
     def get_function(self):
-        if self == Metric.IMAGE_ABSOLUTE_DIFFERENCE:
+        if self == SimilarityMetric.IMAGE_ABSOLUTE_DIFFERENCE:
             return lambda a, b: np.absolute(a - b)
-        elif self == Metric.CORRELATION_HISTOGRAM:
+        elif self == SimilarityMetric.CORRELATION_HISTOGRAM:
             return corr_hist_function
-        elif self == Metric.SSIM:
+        elif self == SimilarityMetric.SSIM:
             return ssim_function
-        elif self == Metric.MEAN_ABSOLUTE_ERROR:
-            return lambda a, b: np.abs(a - b).mean()
-        elif self == Metric.ROOT_MEAN_SQUARED_ERROR:
-            return lambda a, b: math.sqrt(np.square(a - b).mean())
-        elif self == Metric.MAX_ABSOLUTE_ERROR:
-            return lambda a, b: np.max(np.absolute(a - b))
-        elif self == Metric.CORRELATION:
+        elif self == SimilarityMetric.MEAN_ABSOLUTE_ERROR:
+            return lambda a, b: -np.abs(a - b).mean()
+        elif self == SimilarityMetric.ROOT_MEAN_SQUARED_ERROR:
+            return lambda a, b: -math.sqrt(np.square(a - b).mean())
+        elif self == SimilarityMetric.MAX_ABSOLUTE_ERROR:
+            return lambda a, b: -np.max(np.absolute(a - b))
+        elif self == SimilarityMetric.CORRELATION:
             return lambda a, b: np.corrcoef(a.flatten(), b.flatten())[0, 1]
-        elif self == Metric.DICE:
+        elif self == SimilarityMetric.DICE:
             return dice_function
-        elif self == Metric.MUTUAL_INFORMATION:
-            return lambda a, b: normalized_mutual_info_score(a.flatten(), b.flatten())
-        elif self == Metric.CONTINUOUS_MUTUAL_INFORMATION:
+        elif self == SimilarityMetric.DISCRETE_MUTUAL_INFORMATION:
+            return lambda a, b: mutual_info_regression(np.array([a.flatten()]).transpose(), b.flatten(), discrete_features=True)[0]
+        elif self == SimilarityMetric.CONTINUOUS_MUTUAL_INFORMATION:
             return lambda a, b: mutual_info_regression(np.array([a.flatten()]).transpose(), b.flatten())[0]
+        elif self == SimilarityMetric.EUCLIDEAN_DISTANCE:
+            return lambda a, b: -euclidean(a, b)
+        elif self == SimilarityMetric.COSINE_SIMILARITY:
+            return lambda a, b: 1-cosine(a, b)
