@@ -155,12 +155,35 @@ class DatasetProcessing:
             results = pool.map(function, all_indexes_pairs)
 
         os.makedirs(os.path.join(SIMULATION_SIMILARITY_FOLDER, "similarity_between_matrix"), exist_ok=True)
-        path_mean = os.path.join(SIMULATION_SIMILARITY_FOLDER, "similarity_between_matrix", f"mean_{metric.__str__()}_{timestep}_{img_type}_{parameter}_{difference}.npy")
-        path_std = os.path.join(SIMULATION_SIMILARITY_FOLDER, "similarity_between_matrix", f"std_{metric.__str__()}_{timestep}_{img_type}_{parameter}_{difference}.npy")
-        np.load(path_mean, np.mean(results, axis=0))
-        np.load(path_std, np.std(results, axis=0))
+
+        mean = np.mean(results, axis=0)
+        std = np.std(results, axis=0)
+
+        if len(mean.shape) == 2:
+            path_mean = os.path.join(SIMULATION_SIMILARITY_FOLDER, "similarity_between_matrix", f"mean_{metric.__str__()}_{timestep}_{img_type}_{parameter}_{difference}.npy")
+            path_std = os.path.join(SIMULATION_SIMILARITY_FOLDER, "similarity_between_matrix", f"std_{metric.__str__()}_{timestep}_{img_type}_{parameter}_{difference}.npy")
+            np.save(path_mean, mean)
+            np.save(path_std, std)
+        else:
+            path_scalar_similarity = os.path.join(SIMULATION_SIMILARITY_FOLDER, "similarity_between_matrix", f"scalar_similarity.csv")
+            if os.path.exists(path_scalar_similarity):
+                scalar_similarity = pd.read_csv(path_scalar_similarity, index_col=0)
+            else:
+                scalar_similarity = pd.DataFrame(columns=["Metric", "Timestep", "Img_Type", "Parameter", "Difference", "Mean_Similarity_Measure", "Std_Similarity_Measure"])
+
+            scalar_similarity.loc[-1] = [metric.__str__(), timestep, img_type, parameter, difference, mean, std]
+            scalar_similarity.index = scalar_similarity.index + 1
+            scalar_similarity = scalar_similarity.drop_duplicates(subset=['Metric', 'Timestep', 'Img_Type', 'Parameter', 'Difference'], keep='last')
+            scalar_similarity = scalar_similarity.sort_index()
+            scalar_similarity.to_csv(path_scalar_similarity)
 
 
 if __name__ == "__main__":
     dataset_processing = DatasetProcessing("full_no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)")
-
+    time = 350
+    image_type = IMG_TYPES[0]
+    parameter = "cell_cycle"
+    for difference in range(0, 27):
+        print(difference)
+        for metric in SimilarityMetric:
+            dataset_processing.similarity_between_matrix_per_difference(metric, time, image_type, parameter, difference, tol=0, process_number=12, iteration=1000)

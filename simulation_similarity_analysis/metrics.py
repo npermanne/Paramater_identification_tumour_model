@@ -87,6 +87,6 @@ class SimilarityMetric(Enum):
         elif self == SimilarityMetric.CONTINUOUS_MUTUAL_INFORMATION:
             return lambda a, b: mutual_info_regression(np.array([a.flatten()]).transpose(), b.flatten())[0]
         elif self == SimilarityMetric.EUCLIDEAN_DISTANCE:
-            return lambda a, b: -euclidean(a, b)
+            return lambda a, b: -euclidean(a.flatten(), b.flatten())
         elif self == SimilarityMetric.COSINE_SIMILARITY:
-            return lambda a, b: 1-cosine(a, b)
+            return lambda a, b: 1-cosine(a.flatten(), b.flatten())
