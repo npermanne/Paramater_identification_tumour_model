@@ -4,10 +4,6 @@ import pandas as pd
 import os
 from sklearn.feature_selection import mutual_info_regression
 from sklearn.manifold import Isomap
-import re
-from skimage.metrics import structural_similarity
-import math
-from enum import Enum
 from multiprocessing import Pool
 from sklearn.decomposition import PCA
 from metrics import SimilarityMetric
@@ -180,10 +176,15 @@ class DatasetProcessing:
 
 if __name__ == "__main__":
     dataset_processing = DatasetProcessing("full_no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)")
-    time = 350
+    timestep = 350
     image_type = IMG_TYPES[0]
     parameter = "cell_cycle"
     for difference in range(0, 27):
-        print(difference)
         for metric in SimilarityMetric:
-            dataset_processing.similarity_between_matrix_per_difference(metric, time, image_type, parameter, difference, tol=0, process_number=12, iteration=1000)
+            dataset_processing.similarity_between_matrix_per_difference(metric, timestep, image_type, parameter, difference, tol=0, process_number=12, iteration=10000)
+
+    image_type = IMG_TYPES[2]
+    parameter = "average_cancer_oxygen_consumption"
+    for difference in range(0, 24):
+        for metric in SimilarityMetric:
+            dataset_processing.similarity_between_matrix_per_difference(metric, timestep, image_type, parameter, difference, tol=0.1, process_number=12, iteration=10000)
