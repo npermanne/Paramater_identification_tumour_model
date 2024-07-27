@@ -34,10 +34,8 @@ class SimilarityMetric(Enum):
     MAX_ABSOLUTE_ERROR = 5
     CORRELATION = 6
     DICE = 7
-    DISCRETE_MUTUAL_INFORMATION = 8
-    CONTINUOUS_MUTUAL_INFORMATION = 9
-    EUCLIDEAN_DISTANCE = 10
-    COSINE_SIMILARITY = 11
+    MUTUAL_INFORMATION = 8
+    COSINE_SIMILARITY = 9
 
     def __str__(self):
         if self == SimilarityMetric.IMAGE_ABSOLUTE_DIFFERENCE:
@@ -56,12 +54,8 @@ class SimilarityMetric(Enum):
             return "correlation"
         elif self == SimilarityMetric.DICE:
             return "sørensen–Dice coefficient "
-        elif self == SimilarityMetric.DISCRETE_MUTUAL_INFORMATION:
-            return "discrete mutual information"
-        elif self == SimilarityMetric.CONTINUOUS_MUTUAL_INFORMATION:
-            return "continuous mutual information"
-        elif self == SimilarityMetric.EUCLIDEAN_DISTANCE:
-            return "euclidean distance"
+        elif self == SimilarityMetric.MUTUAL_INFORMATION:
+            return "mutual information"
         elif self == SimilarityMetric.COSINE_SIMILARITY:
             return "cosine similarity"
 
@@ -82,11 +76,7 @@ class SimilarityMetric(Enum):
             return lambda a, b: np.corrcoef(a.flatten(), b.flatten())[0, 1]
         elif self == SimilarityMetric.DICE:
             return dice_function
-        elif self == SimilarityMetric.DISCRETE_MUTUAL_INFORMATION:
-            return lambda a, b: mutual_info_regression(np.array([a.flatten()]).transpose(), b.flatten(), discrete_features=True)[0]
-        elif self == SimilarityMetric.CONTINUOUS_MUTUAL_INFORMATION:
-            return lambda a, b: mutual_info_regression(np.array([a.flatten()]).transpose(), b.flatten())[0]
-        elif self == SimilarityMetric.EUCLIDEAN_DISTANCE:
-            return lambda a, b: -euclidean(a.flatten(), b.flatten())
+        elif self == SimilarityMetric.MUTUAL_INFORMATION:
+            return lambda a, b: mutual_info_regression(np.array([a.flatten()]).transpose(), b.flatten(), discrete_features='auto')[0]
         elif self == SimilarityMetric.COSINE_SIMILARITY:
             return lambda a, b: 1-cosine(a.flatten(), b.flatten())
