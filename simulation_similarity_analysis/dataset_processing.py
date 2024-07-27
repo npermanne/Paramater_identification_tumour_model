@@ -177,14 +177,10 @@ class DatasetProcessing:
 if __name__ == "__main__":
     dataset_processing = DatasetProcessing("full_no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)")
     timestep = 350
-    image_type = IMG_TYPES[0]
-    parameter = "cell_cycle"
-    for difference in range(0, 27):
-        for metric in SimilarityMetric:
-            dataset_processing.similarity_between_matrix_per_difference(metric, timestep, image_type, parameter, difference, tol=0, process_number=12, iteration=10000)
-
     image_type = IMG_TYPES[2]
     parameter = "average_cancer_oxygen_consumption"
     for difference in range(0, 24):
         for metric in SimilarityMetric:
-            dataset_processing.similarity_between_matrix_per_difference(metric, timestep, image_type, parameter, difference, tol=0.1, process_number=12, iteration=10000)
+            print(metric)
+            if metric != SimilarityMetric.DISCRETE_MUTUAL_INFORMATION:
+                dataset_processing.similarity_between_matrix_per_difference(metric, timestep, image_type, parameter, difference, tol=0.1, process_number=12, iteration=10000)
