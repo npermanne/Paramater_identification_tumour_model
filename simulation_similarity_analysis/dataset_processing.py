@@ -180,7 +180,7 @@ if __name__ == "__main__":
     image_type = IMG_TYPES[2]
     parameter = "average_cancer_oxygen_consumption"
     for difference in range(0, 24):
+        print(metric)
         for metric in SimilarityMetric:
-            print(metric)
             if metric != SimilarityMetric.DISCRETE_MUTUAL_INFORMATION:
                 dataset_processing.similarity_between_matrix_per_difference(metric, timestep, image_type, parameter, difference, tol=0.1, process_number=12, iteration=10000)
