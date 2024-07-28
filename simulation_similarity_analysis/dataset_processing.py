@@ -179,14 +179,7 @@ if __name__ == "__main__":
 
     for timestep in [350, 550, 750]:
         # For discrete like image
-        image_type = IMG_TYPES[2]
-        parameter = "average_cancer_oxygen_consumption"
-        for difference in range(0, 24):
-            for metric in SimilarityMetric:
-                dataset_processing.similarity_between_matrix_per_difference(metric, timestep, image_type, parameter, difference, tol=0.1, process_number=12, iteration=10000)
-
-        # For continuous like image
-        image_type = IMG_TYPES[1]
+        image_type = IMG_TYPES[0]
         parameter = "cell_cycle"
         for difference in range(0, 26):
             for metric in SimilarityMetric:
