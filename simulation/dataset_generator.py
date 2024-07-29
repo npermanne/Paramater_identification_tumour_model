@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import time
 import os
+import pickle
 
 # PATH (should be the same that in networks/dataLoader.py
 DATASET_FOLDER_PATH = "datasets"
@@ -19,6 +20,7 @@ CELLS_TYPES = "cells_types"
 CELLS_DENSITIES = "cells_densities"
 OXYGEN = "oxygen"
 GLUCOSE = "glucose"
+TOTAL_DOSES = "total_doses"
 
 
 class DatasetGenerator:
@@ -56,7 +58,7 @@ class DatasetGenerator:
     """
 
     def __init__(self, img_size, start_draw, interval, n_draw, parameter_data_file, parameters_of_interest, n_samples,
-                 name, treatment=None):
+                 name, treatments=None):
         self.img_size = img_size
         self.start_draw = start_draw
         self.interval = interval
@@ -66,30 +68,23 @@ class DatasetGenerator:
         self.n_samples = n_samples
         self.name = DATASET_FOLDER_NAME.format(name, self.start_draw, self.interval, self.n_draw, self.img_size[0],
                                                self.img_size[1])
-        self.treatment = treatment
+        self.treatments = treatments
 
-    def generate_sample(self, parameter, color_type=True):
+    def generate_sample(self, parameter, treatment_planning=None):
         sample = {}
-        simu = Simulation(self.img_size[0], self.img_size[1], parameter, self.treatment)
+        simu = Simulation(self.img_size[0], self.img_size[1], parameter, treatment_planning)
         simu.cycle(self.start_draw)
         for i in range(self.n_draw):
-            sample[self.start_draw + i * self.interval] = {CELLS_TYPES: simu.get_cells_type(color=color_type),
+            sample[self.start_draw + i * self.interval] = {CELLS_TYPES: simu.get_cells_type(color=False),
                                                            CELLS_DENSITIES: simu.get_cells_density(),
                                                            OXYGEN: simu.get_oxygen(), GLUCOSE: simu.get_glucose()}
+            if treatment_planning is not None:
+                sample[self.start_draw + i * self.interval][TOTAL_DOSES] = simu.get_total_doses()
             simu.cycle(self.interval)
         return sample
 
-    def plot_sample(self, parameter):
-        sample = self.generate_sample(parameter)
-        plt.axis("off")
-        for time, draw in sample.items():
-            for type, matrix in draw.items():
-                path = os.path.join("pictures",
-                                    "simu_{}x{}_t{}_{}.png".format(self.img_size[0], self.img_size[1], time, type))
-                plt.imshow(matrix)
-                plt.savefig(path, bbox_inches='tight')
-
     def generate_parameters(self):
+        # Generate parameter
         parameters = {}
         for nameRow, row in self.parameter_data.iterrows():
             if nameRow not in self.parameters_of_interest:
@@ -104,21 +99,30 @@ class DatasetGenerator:
                 else:
                     parameters[nameRow] = np.random.uniform(low=float(row["Minimum"]), high=float(row["Maximum"]),
                                                             size=self.n_samples)
-        return parameters
+        # Generate treatment
+        if self.treatments is not None and len(self.treatments.shape) == 2:
+            all_treatments = np.random.default_rng().choice(best_treatments, size=3200, replace=True)
+            return pd.DataFrame(parameters), all_treatments
+        else:
+            return pd.DataFrame(parameters), None
 
     def generate_dataset(self):
         general_path = os.path.join(DATASET_FOLDER_PATH, self.name)
         if not os.path.exists(general_path):
             os.makedirs(general_path)
 
-        df = pd.DataFrame(self.generate_parameters())
+        df, all_treatments = self.generate_parameters()
         df.to_csv(os.path.join(general_path, DATASET_FILE_NAME), index=True)
+        np.save(os.path.join(general_path, "treatments.npy"), all_treatments)
 
         times = []
         print("Starting for {}".format(self.n_samples), end='\r')
-        for index, rows in df.iterrows():
+        for index, row in df.iterrows():
             start = time.time()
-            sample = self.generate_sample(rows, color_type=False)
+            if all_treatments is not None:
+                sample = self.generate_sample(row, treatment_planning=all_treatments[index])
+            else:
+                sample = self.generate_sample(row)
             for t, draw in sample.items():
                 for type, matrix in draw.items():
                     path = os.path.join(general_path, DATA_NAME.format(index, type, t))
@@ -134,14 +138,18 @@ class DatasetGenerator:
         if not os.path.exists(general_path):
             os.makedirs(general_path)
 
-        df = pd.DataFrame(self.generate_parameters())
+        df, all_treatments = self.generate_parameters()
         df.to_csv(os.path.join(general_path, DATASET_FILE_NAME), index=True)
+        np.save(os.path.join(general_path, "treatments.npy"), all_treatments)
 
         global generate
 
         def generate(i):
             row = df.iloc[i]
-            sample = self.generate_sample(row, color_type=False)
+            if all_treatments is not None:
+                sample = self.generate_sample(row, treatment_planning=all_treatments[i])
+            else:
+                sample = self.generate_sample(row)
             for t, draw in sample.items():
                 for type, matrix in draw.items():
                     path = os.path.join(general_path, DATA_NAME.format(i, type, t))
@@ -176,9 +184,21 @@ class DatasetGenerator:
 
 
 if __name__ == '__main__':
-    dose_hours = list(range(350, 1300, 24))
-    default_treatment = np.zeros(1300)
-    default_treatment[dose_hours] = 2
+    # Define best treatments
+    result_florian = pickle.load(open(os.path.join("simulation", "best_result_rl_Florian.pickle"), "rb"))
+    best_treatments = list()
+    for dose_per_hour in result_florian["doses_per_hour"].values():
+        treatment = np.zeros(1100)
+        for key, value in dose_per_hour.items():
+            treatment[350 + key] = value
+        best_treatments.append(treatment)
+    best_treatments = np.array(best_treatments)
+
+    # Define baseline treatments
+    dose_hours = list(range(350, 1071, 24))
+    baseline_treatment = np.zeros(1100)
+    baseline_treatment[dose_hours] = 2
+    baseline_treatment = np.array([baseline_treatment])
 
     parameter_data_file_path = os.path.join("simulation", "parameter_data.csv")
     param_interest = [
@@ -188,7 +208,9 @@ if __name__ == '__main__':
         "average_cancer_oxygen_consumption",
         "cell_cycle"
     ]
-    dataset_generator = DatasetGenerator((64, 64), 350, 100, 8, parameter_data_file_path, param_interest, 3200,
-                                         "full_treatment_dataset", treatment=default_treatment)
 
-    dataset_generator.generate_missing_multi_process(12)
+    dataset_generator = DatasetGenerator((64, 64), 350, 100, 8, parameter_data_file_path, param_interest, 3200, "baseline_treatment_dataset", baseline_treatment)
+    dataset_generator.generate_dataset_multi_process(12)
+
+    dataset_generator = DatasetGenerator((64, 64), 350, 100, 8, parameter_data_file_path, param_interest, 3200, "best_model_treatment_dataset", best_treatments)
+    dataset_generator.generate_dataset_multi_process(12)

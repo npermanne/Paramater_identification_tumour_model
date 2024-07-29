@@ -135,6 +135,8 @@ class Grid:
         # With a helper array of same shape, we can simply compute the result inside the other and alternate between
         # the arrays.
 
+        self.total_doses = np.full((xsize, ysize), 0)
+
         self.cells = np.empty((xsize, ysize), dtype=object)
         for i in range(xsize):
             for j in range(ysize):
@@ -371,6 +373,7 @@ class Grid:
             for j in range(self.ysize):
                 dist = math.sqrt((x - i) ** 2 + (y - j) ** 2)
                 if dist < 3 * radius:
+                    self.total_doses[i, j] += scale(radius, dist, multiplicator)
                     omf = (self.oxygen[i, j] / 100.0 * oer_m + k_m) / (self.oxygen[i, j] / 100.0 + k_m) / oer_m
                     for cell in self.cells[i, j]:
                         cell.radiate(scale(radius, dist, multiplicator) * omf)
@@ -448,6 +451,7 @@ class Grid:
             for j in range(self.ysize):
                 tot += self.cells[i, j].num_c_cells
         return tot
+
 
 def conv(rad, x):
     denom = 3.8  # //sqrt(2) * 2.7

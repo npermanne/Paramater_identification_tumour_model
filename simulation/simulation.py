@@ -179,7 +179,7 @@ class Simulation:
             self.grid.cycle_cells()
             self.grid.diffuse_glucose(self.glucose_diffuse_rate)
             self.grid.diffuse_oxygen(self.oxygen_diffuse_rate)
-            if self.treatment_planning is not None:
+            if self.treatment_planning is not None and len(self.treatment_planning) > self.hours_passed and self.treatment_planning[self.hours_passed] != 0:
                 self.grid.irradiate(self.treatment_planning[self.hours_passed])
             self.hours_passed += 1
             if self.hours_passed % 24 == 0:
@@ -199,6 +199,9 @@ class Simulation:
 
     def get_oxygen(self):
         return self.grid.oxygen
+
+    def get_total_doses(self):
+        return self.grid.total_doses
 
 
 def patch_type_color(patch):
