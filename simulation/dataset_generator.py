@@ -1,10 +1,7 @@
 import re
 from collections import Counter
 from simulation import Simulation
-from simulation import DEFAULT_PARAMETERS
-from enum import Enum
 from multiprocessing import Pool
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import time
