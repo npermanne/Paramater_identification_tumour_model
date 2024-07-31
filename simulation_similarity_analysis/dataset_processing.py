@@ -16,6 +16,7 @@ SIMULATION_SIMILARITY_FOLDER = "simulation_similarity_analysis"
 
 IMG_TYPES = ["cells_types", "cells_densities", "oxygen", "glucose"]
 TIMESTEPS = range(350, 1150, 100)
+parameters = ["cell_cycle","average_healthy_glucose_absorption","average_cancer_glucose_absorption","average_healthy_oxygen_consumption","average_cancer_oxygen_consumption"]
 
 
 # Find all pair of value that have a specific difference in an array
@@ -43,12 +44,13 @@ class DatasetProcessing:
             __getitem__(item): Return a specific sample and his parameter
         """
 
-    def __init__(self, dataset_name: str, jupyter=False):
+    def __init__(self, dataset_name: str, processed_data_folder: str, jupyter=False):
         self.dataset_name = dataset_name
         self.dataset_path = os.path.join(DATASETS_FOLDER, self.dataset_name)
         if jupyter:
             self.dataset_path = os.path.join("..", self.dataset_path)
         self.dataset = pd.read_csv(os.path.join(self.dataset_path, DATASET_CSV_NAME), index_col=0)
+        self.processed_data_folder = os.path.join(SIMULATION_SIMILARITY_FOLDER, processed_data_folder)
 
     def __len__(self):
         return len(self.dataset)
@@ -83,46 +85,46 @@ class DatasetProcessing:
         return sample_matrix
 
     def pca_per_matrix(self, timestep, img_type):
-        os.makedirs(os.path.join(SIMULATION_SIMILARITY_FOLDER, "pca"), exist_ok=True)
+        os.makedirs(os.path.join(self.processed_data_folder, "pca"), exist_ok=True)
         data = np.array([self.get_sample_matrix(i, timestep, img_type).flatten() for i in range(self.__len__())])
         pca = PCA(n_components=2)
         reduction = pca.fit_transform(data)
         explained_variance = pca.explained_variance_ratio_.sum()
-        path = os.path.join(SIMULATION_SIMILARITY_FOLDER, "pca", f"pca_{img_type}_{timestep}_vr={explained_variance:.2f}.npy")
+        path = os.path.join(self.processed_data_folder, "pca", f"pca_{img_type}_{timestep}_vr={explained_variance:.2f}.npy")
         np.save(path, reduction)
 
     def pca_combined(self):
-        os.makedirs(os.path.join(SIMULATION_SIMILARITY_FOLDER, "pca"), exist_ok=True)
+        os.makedirs(os.path.join(self.processed_data_folder, "pca"), exist_ok=True)
         data = np.array([self[i][1].flatten() for i in range(len(self))])
         pca = PCA(n_components=2)
         reduction = pca.fit_transform(data)
         explained_variance = pca.explained_variance_ratio_.sum()
-        path = os.path.join(SIMULATION_SIMILARITY_FOLDER, "pca", f"pca_combined_vr={explained_variance:.4f}.npy")
+        path = os.path.join(self.processed_data_folder, "pca", f"pca_combined_vr={explained_variance:.4f}.npy")
         np.save(path, reduction)
 
     def isomap_per_matrix(self, timestep, img_type):
-        os.makedirs(os.path.join(SIMULATION_SIMILARITY_FOLDER, "isomap"), exist_ok=True)
+        os.makedirs(os.path.join(self.processed_data_folder, "isomap"), exist_ok=True)
         data = np.array([self.get_sample_matrix(i, timestep, img_type).flatten() for i in range(self.__len__())])
         isomap = Isomap(n_components=2, n_neighbors=15)
         reduction = isomap.fit_transform(data)
-        path = os.path.join(SIMULATION_SIMILARITY_FOLDER, "isomap", f"isomap_{img_type}_{timestep}.npy")
+        path = os.path.join(self.processed_data_folder, "isomap", f"isomap_{img_type}_{timestep}.npy")
         np.save(path, reduction)
 
     def isomap_combined(self):
-        os.makedirs(os.path.join(SIMULATION_SIMILARITY_FOLDER, "isomap"), exist_ok=True)
+        os.makedirs(os.path.join(self.processed_data_folder, "isomap"), exist_ok=True)
         data = np.array([self[i][1].flatten() for i in range(len(self))])
         isomap = Isomap(n_components=2, n_neighbors=15)
         reduction = isomap.fit_transform(data)
-        path = os.path.join(SIMULATION_SIMILARITY_FOLDER, "isomap", f"isomap_combined.npy")
+        path = os.path.join(self.processed_data_folder, "isomap", f"isomap_combined.npy")
         np.save(path, reduction)
 
     def mutual_information(self, timestep, img_type, parameter):
-        os.makedirs(os.path.join(SIMULATION_SIMILARITY_FOLDER, "mi"), exist_ok=True)
+        os.makedirs(os.path.join(self.processed_data_folder, "mi"), exist_ok=True)
         data_matrices = [self.get_sample_matrix(i, timestep, img_type).flatten() for i in range(self.__len__())]
         n = int(np.sqrt(len(data_matrices[0])))
         data_target = np.array([self.get_sample_param(i)[parameter] for i in range(len(self))])
         mutual_information = mutual_info_regression(data_matrices, data_target, discrete_features=(img_type == "cells_types")).reshape(n, n)
-        path = os.path.join(SIMULATION_SIMILARITY_FOLDER, "mi", f"mi_{timestep}_{img_type}_{parameter}.npy")
+        path = os.path.join(self.processed_data_folder, "mi", f"mi_{timestep}_{img_type}_{parameter}.npy")
         np.save(path, mutual_information)
 
     def similarity_between_matrix_per_difference(self, metric: SimilarityMetric, timestep: int, img_type: str, parameter: str, difference: float, tol: float, process_number: int, iteration: int):
@@ -150,18 +152,18 @@ class DatasetProcessing:
         with Pool(processes=process_number) as pool:
             results = pool.map(function, all_indexes_pairs)
 
-        os.makedirs(os.path.join(SIMULATION_SIMILARITY_FOLDER, "similarity_between_matrix"), exist_ok=True)
+        os.makedirs(os.path.join(self.processed_data_folder, "similarity_between_matrix"), exist_ok=True)
 
         mean = np.mean(results, axis=0)
         std = np.std(results, axis=0)
 
         if len(mean.shape) == 2:
-            path_mean = os.path.join(SIMULATION_SIMILARITY_FOLDER, "similarity_between_matrix", f"mean_{metric.__str__()}_{timestep}_{img_type}_{parameter}_{difference}.npy")
-            path_std = os.path.join(SIMULATION_SIMILARITY_FOLDER, "similarity_between_matrix", f"std_{metric.__str__()}_{timestep}_{img_type}_{parameter}_{difference}.npy")
+            path_mean = os.path.join(self.processed_data_folder, "similarity_between_matrix", f"mean_{metric.__str__()}_{timestep}_{img_type}_{parameter}_{difference}.npy")
+            path_std = os.path.join(self.processed_data_folder, "similarity_between_matrix", f"std_{metric.__str__()}_{timestep}_{img_type}_{parameter}_{difference}.npy")
             np.save(path_mean, mean)
             np.save(path_std, std)
         else:
-            path_scalar_similarity = os.path.join(SIMULATION_SIMILARITY_FOLDER, "similarity_between_matrix", f"scalar_similarity.csv")
+            path_scalar_similarity = os.path.join(self.processed_data_folder, "similarity_between_matrix", f"scalar_similarity.csv")
             if os.path.exists(path_scalar_similarity):
                 scalar_similarity = pd.read_csv(path_scalar_similarity, index_col=0)
             else:
@@ -175,12 +177,30 @@ class DatasetProcessing:
 
 
 if __name__ == "__main__":
-    dataset_processing = DatasetProcessing("full_no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)")
+    dataset_processing = DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis")
 
-    for timestep in [350, 550, 750]:
-        # For discrete like image
-        image_type = IMG_TYPES[0]
-        parameter = "cell_cycle"
-        for difference in range(0, 26):
-            for metric in SimilarityMetric:
-                dataset_processing.similarity_between_matrix_per_difference(metric, timestep, image_type, parameter, difference, tol=0.1, process_number=12, iteration=10000)
+    # PCA
+    dataset_processing.pca_combined()
+    for i in TIMESTEPS:
+        for j in IMG_TYPES:
+            dataset_processing.pca_per_matrix(i, j)
+
+    # MI
+    for p in parameters:
+        for i in TIMESTEPS:
+            for j in IMG_TYPES:
+                dataset_processing.mutual_information(i, j, p)
+
+    dataset_processing = DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
+
+    # PCA
+    dataset_processing.pca_combined()
+    for i in TIMESTEPS:
+        for j in IMG_TYPES:
+            dataset_processing.pca_per_matrix(i, j)
+
+    # MI
+    for p in parameters:
+        for i in TIMESTEPS:
+            for j in IMG_TYPES:
+                dataset_processing.mutual_information(i, j, p)
