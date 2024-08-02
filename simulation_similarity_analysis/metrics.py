@@ -3,7 +3,7 @@ from enum import Enum
 import math
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
-from scipy.spatial.distance import euclidean, cosine
+from scipy.spatial.distance import cosine
 
 
 def ssim_function(image1, image2):
@@ -18,11 +18,22 @@ def corr_hist_function(image1, image2):
     return np.corrcoef(hist1, hist2)[0, 1]
 
 
-def dice_function(image1, image2):
-    flatten_image1 = image1.flatten()
-    flatten_image2 = image2.flatten()
-    number_of_equal = np.count_nonzero(flatten_image1 == flatten_image2)
-    return 2 * number_of_equal / (len(flatten_image1) * len(flatten_image2))
+def inter_hist_function(image1, image2):
+    min_value, max_value = min(np.min(image1), np.min(image2)), max(np.max(image1), np.max(image2))
+    hist1, bins1 = np.histogram(image1, bins=np.linspace(min_value, max_value + 1, 100))
+    hist2, bins2 = np.histogram(image2, bins=np.linspace(min_value, max_value + 1, 100))
+    return np.sum(np.minimum(hist1, hist2)) / np.sum(hist1)
+
+
+def set_function(image1, image2, func):
+    i1, i2 = image1.flatten(), image2.flatten()
+    c1, e1, h1 = i1 == -1, i1 == 0, i1 == 1
+    c2, e2, h2 = i2 == -1, i2 == 0, i2 == 1
+    return (func(c1, c2) + func(e1, e2) + func(h1, h2)) / 3
+
+
+dice = lambda a, b: 2 * np.sum(a & b) / (np.sum(a) + np.sum(b))
+jaccard = lambda a, b: np.sum(a & b) / (np.sum(a) + np.sum(b) - np.sum(a & b))
 
 
 class SimilarityMetric(Enum):
@@ -33,9 +44,11 @@ class SimilarityMetric(Enum):
     ROOT_MEAN_SQUARED_ERROR = 4
     MAX_ABSOLUTE_ERROR = 5
     CORRELATION = 6
-    DICE = 7
     MUTUAL_INFORMATION = 8
     COSINE_SIMILARITY = 9
+    INTERSECTION_HISTOGRAM = 10
+    DICE = 11
+    JACCARD = 12
 
     def __str__(self):
         if self == SimilarityMetric.IMAGE_ABSOLUTE_DIFFERENCE:
@@ -52,12 +65,16 @@ class SimilarityMetric(Enum):
             return "max absolute error"
         elif self == SimilarityMetric.CORRELATION:
             return "correlation"
-        elif self == SimilarityMetric.DICE:
-            return "sørensen–Dice coefficient "
         elif self == SimilarityMetric.MUTUAL_INFORMATION:
             return "mutual information"
         elif self == SimilarityMetric.COSINE_SIMILARITY:
             return "cosine similarity"
+        elif self == SimilarityMetric.INTERSECTION_HISTOGRAM:
+            return "histogram intersection "
+        elif self == SimilarityMetric.DICE:
+            return "dice-Sørensen coefficient"
+        elif self == SimilarityMetric.JACCARD:
+            return "jaccard coefficient"
 
     def get_function(self):
         if self == SimilarityMetric.IMAGE_ABSOLUTE_DIFFERENCE:
@@ -74,9 +91,13 @@ class SimilarityMetric(Enum):
             return lambda a, b: -np.max(np.absolute(a - b))
         elif self == SimilarityMetric.CORRELATION:
             return lambda a, b: np.corrcoef(a.flatten(), b.flatten())[0, 1]
-        elif self == SimilarityMetric.DICE:
-            return dice_function
         elif self == SimilarityMetric.MUTUAL_INFORMATION:
             return lambda a, b: mutual_info_regression(np.array([a.flatten()]).transpose(), b.flatten(), discrete_features='auto')[0]
         elif self == SimilarityMetric.COSINE_SIMILARITY:
-            return lambda a, b: 1-cosine(a.flatten(), b.flatten())
+            return lambda a, b: 1 - cosine(a.flatten(), b.flatten())
+        elif self == SimilarityMetric.INTERSECTION_HISTOGRAM:
+            return inter_hist_function
+        elif self == SimilarityMetric.DICE:
+            return lambda a, b: set_function(a, b, func=dice)
+        elif self == SimilarityMetric.JACCARD:
+            return lambda a, b: set_function(a, b, func=jaccard)
