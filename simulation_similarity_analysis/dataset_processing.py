@@ -188,7 +188,7 @@ if __name__ == "__main__":
             print(f"Starting {dataset_processing.dataset_name} for timestep {timestep}")
             # Discrete image
             img_type = "cells_types"
-            parameter = "cell cycle"
+            parameter = "cell_cycle"
             for difference in range(0, 27):
                 for metric in SimilarityMetric:
                     dataset_processing.similarity_between_matrix_per_difference(metric=metric, timestep=timestep, img_type=img_type, parameter=parameter, difference=difference, tol=0, process_number=12, iteration=100000)
