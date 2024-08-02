@@ -185,6 +185,7 @@ if __name__ == "__main__":
 
     for dataset_processing in datasets:
         for timestep in [350, 550, 750]:
+            print(f"Starting {dataset_processing.dataset_name} for timestep {timestep}")
             # Discrete image
             img_type = "cells_types"
             parameter = "cell cycle"
