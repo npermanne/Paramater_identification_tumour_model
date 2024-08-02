@@ -16,7 +16,7 @@ SIMULATION_SIMILARITY_FOLDER = "simulation_similarity_analysis"
 
 IMG_TYPES = ["cells_types", "cells_densities", "oxygen", "glucose"]
 TIMESTEPS = range(350, 1150, 100)
-parameters = ["cell_cycle","average_healthy_glucose_absorption","average_cancer_glucose_absorption","average_healthy_oxygen_consumption","average_cancer_oxygen_consumption"]
+parameters = ["cell_cycle", "average_healthy_glucose_absorption", "average_cancer_glucose_absorption", "average_healthy_oxygen_consumption", "average_cancer_oxygen_consumption"]
 
 
 # Find all pair of value that have a specific difference in an array
@@ -177,30 +177,26 @@ class DatasetProcessing:
 
 
 if __name__ == "__main__":
-    dataset_processing = DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis")
+    datasets = [
+        DatasetProcessing("no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "no_dose_analysis"),
+        DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis"),
+        DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
+    ]
 
-    # PCA
-    dataset_processing.pca_combined()
-    for i in TIMESTEPS:
-        for j in IMG_TYPES:
-            dataset_processing.pca_per_matrix(i, j)
+    for dataset_processing in datasets:
+        for timestep in [350, 550, 750]:
+            # Discrete image
+            img_type = "cells_types"
+            parameter = "cell cycle"
+            for difference in range(0, 27):
+                for metric in SimilarityMetric:
+                    dataset_processing.similarity_between_matrix_per_difference(metric=metric, timestep=timestep, img_type=img_type, parameter=parameter, difference=difference, tol=0, process_number=12, iteration=100000)
 
-    # MI
-    for p in parameters:
-        for i in TIMESTEPS:
-            for j in IMG_TYPES:
-                dataset_processing.mutual_information(i, j, p)
+            # Continuous image
+            img_type = "oxygen"
+            parameter = "average_cancer_oxygen_consumption"
+            for difference in range(0, 24):
+                for metric in SimilarityMetric:
+                    if metric != SimilarityMetric.DICE and metric != SimilarityMetric.JACCARD:
+                        dataset_processing.similarity_between_matrix_per_difference(metric=metric, timestep=timestep, img_type=img_type, parameter=parameter, difference=difference, tol=0.1, process_number=12, iteration=100000)
 
-    dataset_processing = DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
-
-    # PCA
-    dataset_processing.pca_combined()
-    for i in TIMESTEPS:
-        for j in IMG_TYPES:
-            dataset_processing.pca_per_matrix(i, j)
-
-    # MI
-    for p in parameters:
-        for i in TIMESTEPS:
-            for j in IMG_TYPES:
-                dataset_processing.mutual_information(i, j, p)
