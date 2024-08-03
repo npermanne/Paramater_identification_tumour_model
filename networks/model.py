@@ -83,9 +83,9 @@ class Network:
                                              self.n_draws, self.parameter_of_interest, self.img_types)
         self.test_dataset = SimulationDataset("test", param["DATASET"]["FOLDER_NAME"],
                                               self.n_draws, self.parameter_of_interest, self.img_types)
-        self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
-        self.val_dataloader = DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
-        self.test_dataloader = DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
+        self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=param["NUM_WORKERS"])
+        self.val_dataloader = DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False, num_workers=param["NUM_WORKERS"])
+        self.test_dataloader = DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=param["NUM_WORKERS"])
 
         # ARCHITECTURE INITIALIZATION
         self.param_architecture = {
