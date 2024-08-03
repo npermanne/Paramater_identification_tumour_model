@@ -29,7 +29,12 @@ def set_function(image1, image2, func):
     i1, i2 = image1.flatten(), image2.flatten()
     c1, e1, h1 = i1 == -1, i1 == 0, i1 == 1
     c2, e2, h2 = i2 == -1, i2 == 0, i2 == 1
-    return (func(c1, c2) + func(e1, e2) + func(h1, h2)) / 3
+
+    c_index = func(c1, c2) if c1.any() or c2.any() else 0
+    e_index = func(e1, e2) if e1.any() or e2.any() else 0
+    h_index = func(h1, h2) if h1.any() or h2.any() else 0
+    return (c_index + e_index + h_index)/3
+
 
 
 dice = lambda a, b: 2 * np.sum(a & b) / (np.sum(a) + np.sum(b))
@@ -101,3 +106,16 @@ class SimilarityMetric(Enum):
             return lambda a, b: set_function(a, b, func=dice)
         elif self == SimilarityMetric.JACCARD:
             return lambda a, b: set_function(a, b, func=jaccard)
+
+
+if __name__ == '__main__':
+    a = np.array([
+        [-1, -1],
+        [-1, 0]
+    ])
+    b = np.array([
+        [1, -1],
+        [-1, 0]
+    ])
+
+    print(SimilarityMetric.DICE.get_function()(a, b))
