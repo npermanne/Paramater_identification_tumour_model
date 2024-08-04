@@ -9,6 +9,7 @@ import torch.nn as nn
 import os
 import pandas as pd
 from torchinfo import summary
+
 try:
     from tkinter import *
 except ModuleNotFoundError:
@@ -120,13 +121,13 @@ class Network:
     def load_weights(self):
         self.network.load_state_dict(torch.load(self.path_weight))
 
-    def train(self, epoch_variable=None):
+    def train(self, verbose=False, epoch_variable=None):
         validation_losses = np.zeros(self.epochs)
         losses = np.zeros(self.epochs)
 
         # EPOCHS ITERATIONS
         for iter_epoch in range(self.epochs):
-            print("Epoch {}/{}".format(iter_epoch, self.epochs), end='\r')
+            if verbose: print("Epoch {}/{}".format(iter_epoch, self.epochs))
 
             # TRAINING
             running_loss = 0
@@ -175,9 +176,9 @@ class Network:
         # PLOT PERFORMANCE CURVE
         plt.switch_backend('agg')
         plt.cla()
-        X = np.arange(iter_epoch+1)
-        plt.plot(X, losses[:iter_epoch+1], label="Training Loss")
-        plt.plot(X, validation_losses[:iter_epoch+1], label="Validation Loss")
+        X = np.arange(iter_epoch + 1)
+        plt.plot(X, losses[:iter_epoch + 1], label="Training Loss")
+        plt.plot(X, validation_losses[:iter_epoch + 1], label="Validation Loss")
         plt.xlabel("Epoch")
         plt.ylabel("Loss")
         plt.legend()
@@ -187,7 +188,7 @@ class Network:
         self.network.train(False)
         self.network.eval()
 
-        columns = [f"predicted_{p}" for p in self.parameter_of_interest]+[f"true_{p}" for p in self.parameter_of_interest]
+        columns = [f"predicted_{p}" for p in self.parameter_of_interest] + [f"true_{p}" for p in self.parameter_of_interest]
         evaluation_data = pd.DataFrame(columns=columns)
 
         # EVALUATION LOOP
