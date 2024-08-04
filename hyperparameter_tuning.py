@@ -31,6 +31,7 @@ class HyperparameterTuning:
         config["TRAINING"]["L2_REGULARIZATION"] = params["L2_REGULARIZATION"]
         config["TRAINING"]["EARLY_STOPPING_MIN_DELTA"] = self.early_stopping_delta
         config["TRAINING"]["EARLY_STOPPING_PATIENCE"] = self.early_stopping_patience
+        config["TRAINING"]["NUM_WORKERS"] = 5
 
         start = time.time()
         network = Network(config)
@@ -87,9 +88,9 @@ if __name__ == '__main__':
         "L2_REGULARIZATION": [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
     }
 
-    for draw in range(2, 9):
+    for draw in range(1, 9):
         my_task = {
-            "FOLDER_NAME": "full_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)",
+            "FOLDER_NAME": "no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)",
             "N_DRAWS": draw,
             "IMG_TYPES": ["cells_types", "cells_densities", "oxygen", "glucose"],
             "PARAMETERS_OF_INTEREST": ["cell_cycle", "average_healthy_glucose_absorption",
@@ -97,5 +98,6 @@ if __name__ == '__main__':
                                        "average_healthy_oxygen_consumption", "average_cancer_oxygen_consumption"]
         }
 
-        my_tuning = HyperparameterTuning(f"random_search_{'treatment'}_draw={draw}", my_task, my_hyperparameters, 300, 10, 0.001)
-        my_tuning.random_search(20)
+        print(f"Start Hyperparameter Tuning for {draw} draws")
+        my_tuning = HyperparameterTuning(f"hyp_search_no_dose_for_{draw}_draws", my_task, my_hyperparameters, 300, 10, 0.001)
+        my_tuning.local_search(15, 15)
