@@ -2,9 +2,9 @@ import os.path
 import random
 
 from networks.model import Network
-from multiprocessing import Pool
 import pandas as pd
 import time
+import argparse
 
 
 class HyperparameterTuning:
@@ -76,6 +76,10 @@ class HyperparameterTuning:
                 current_best_param = current_best_param if perf_lower is None or current_best_perf < perf_lower else param_lower
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-data', type=str, default='no_dose', choices=["no_dose", "baseline_treatment", "best_model_treatment"])
+parser.add_argument('-draw', type=int, default=1, choices=[1, 2, 3, 4, 5, 6, 7, 8])
+
 if __name__ == '__main__':
     my_hyperparameters = {
         "INPUT_LSTM": [100, 200, 500, 1000],
@@ -88,16 +92,16 @@ if __name__ == '__main__':
         "L2_REGULARIZATION": [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
     }
 
-    for draw in range(1, 9):
-        my_task = {
-            "FOLDER_NAME": "no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)",
-            "N_DRAWS": draw,
-            "IMG_TYPES": ["cells_types", "cells_densities", "oxygen", "glucose"],
-            "PARAMETERS_OF_INTEREST": ["cell_cycle", "average_healthy_glucose_absorption",
-                                       "average_cancer_glucose_absorption",
-                                       "average_healthy_oxygen_consumption", "average_cancer_oxygen_consumption"]
-        }
+    parser = parser.parse_args()
 
-        print(f"Start Hyperparameter Tuning for {draw} draws")
-        my_tuning = HyperparameterTuning(f"hyp_search_no_dose_for_{draw}_draws", my_task, my_hyperparameters, 300, 10, 0.001)
-        my_tuning.local_search(15, 15)
+    my_task = {
+        "FOLDER_NAME": f"{parser.data}_dataset_start=350_interval=100_ndraw=8_size=(64,64)",
+        "N_DRAWS": parser.draw,
+        "IMG_TYPES": ["cells_types", "cells_densities", "oxygen", "glucose"],
+        "PARAMETERS_OF_INTEREST": ["cell_cycle", "average_healthy_glucose_absorption",
+                                   "average_cancer_glucose_absorption",
+                                   "average_healthy_oxygen_consumption", "average_cancer_oxygen_consumption"]
+    }
+
+    my_tuning = HyperparameterTuning(f"hyp_search_{parser.data}_for_{parser.draw}_draws", my_task, my_hyperparameters, 300, 10, 0.001)
+    my_tuning.local_search(15, 15)
