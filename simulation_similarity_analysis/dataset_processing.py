@@ -178,23 +178,25 @@ class DatasetProcessing:
 
 if __name__ == "__main__":
     datasets = [
+        DatasetProcessing("no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "no_dose_analysis"),
+        DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis"),
         DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
     ]
 
     for dataset_processing in datasets:
         for timestep in [350, 550, 750]:
             print(f"Starting {dataset_processing.dataset_name} for timestep {timestep}")
-            # Discrete image
-            img_type = "cells_types"
-            parameter = "cell_cycle"
-            for difference in range(0, 27):
-                for metric in SimilarityMetric:
-                    dataset_processing.similarity_between_matrix_per_difference(metric=metric, timestep=timestep, img_type=img_type, parameter=parameter, difference=difference, tol=0, process_number=12, iteration=100000)
+            # # Discrete image
+            # img_type = "cells_types"
+            # parameter = "cell_cycle"
+            # for difference in range(0, 27):
+            #     for metric in SimilarityMetric:
+            #         dataset_processing.similarity_between_matrix_per_difference(metric=metric, timestep=timestep, img_type=img_type, parameter=parameter, difference=difference, tol=0, process_number=12, iteration=100000)
 
             # Continuous image
             img_type = "oxygen"
-            parameter = "average_cancer_oxygen_consumption"
-            for difference in range(0, 24):
+            parameter = "cell_cycle"
+            for difference in range(0, 27):
                 for metric in SimilarityMetric:
                     if metric != SimilarityMetric.DICE and metric != SimilarityMetric.JACCARD:
                         dataset_processing.similarity_between_matrix_per_difference(metric=metric, timestep=timestep, img_type=img_type, parameter=parameter, difference=difference, tol=0.1, process_number=12, iteration=100000)
