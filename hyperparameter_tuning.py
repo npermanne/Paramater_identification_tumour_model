@@ -104,4 +104,4 @@ if __name__ == '__main__':
     }
 
     my_tuning = HyperparameterTuning(f"hyp_search_{parser.data}_for_{parser.draw}_draws", my_task, my_hyperparameters, 300, 10, 0.001)
-    my_tuning.local_search(10, 10)
+    my_tuning.random_search(40)
