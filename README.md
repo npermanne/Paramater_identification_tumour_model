@@ -1,4 +1,4 @@
-# Parameter identification of tumour model
+# Parameter identification of a tumour growth model for adaptive radiotherapy
 Identification of biological parameters of a tumour growth model for adaptive radiotherapy
 
 ## Description
