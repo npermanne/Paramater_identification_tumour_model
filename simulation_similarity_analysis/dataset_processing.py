@@ -154,6 +154,9 @@ class DatasetProcessing:
 
         os.makedirs(os.path.join(self.processed_data_folder, "similarity_between_matrix"), exist_ok=True)
 
+        results = np.array(results)
+        results = results[~np.isnan(results)]
+
         mean = np.mean(results, axis=0)
         std = np.std(results, axis=0)
 
@@ -188,7 +191,8 @@ if __name__ == "__main__":
             img_type = "cells_types"
             parameter = "cell_cycle"
             for difference in range(0, 27):
-                for metric in SimilarityMetric:
+                print(difference)
+                for metric in [SimilarityMetric.CORRELATION]:
                     dataset_processing.similarity_between_matrix_per_difference(metric=metric, timestep=timestep, img_type=img_type, parameter=parameter, difference=difference, tol=0, process_number=12, iteration=100000)
 
             # Continuous image
@@ -198,4 +202,3 @@ if __name__ == "__main__":
             #     for metric in SimilarityMetric:
             #         if metric != SimilarityMetric.DICE and metric != SimilarityMetric.JACCARD:
             #             dataset_processing.similarity_between_matrix_per_difference(metric=metric, timestep=timestep, img_type=img_type, parameter=parameter, difference=difference, tol=0.1, process_number=12, iteration=100000)
-
