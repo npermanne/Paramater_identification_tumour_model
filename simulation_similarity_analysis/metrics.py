@@ -33,12 +33,16 @@ def set_function(image1, image2, func):
     c_index = func(c1, c2) if c1.any() or c2.any() else 0
     e_index = func(e1, e2) if e1.any() or e2.any() else 0
     h_index = func(h1, h2) if h1.any() or h2.any() else 0
-    return (c_index + e_index + h_index)/3
-
+    return (c_index + e_index + h_index) / 3
 
 
 dice = lambda a, b: 2 * np.sum(a & b) / (np.sum(a) + np.sum(b))
 jaccard = lambda a, b: np.sum(a & b) / (np.sum(a) + np.sum(b) - np.sum(a & b))
+
+
+def corr(a,b):
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.corrcoef(a.flatten(), b.flatten())[0, 1]
 
 
 class SimilarityMetric(Enum):
@@ -95,7 +99,7 @@ class SimilarityMetric(Enum):
         elif self == SimilarityMetric.MAX_ABSOLUTE_ERROR:
             return lambda a, b: -np.max(np.absolute(a - b))
         elif self == SimilarityMetric.CORRELATION:
-            return lambda a, b: np.corrcoef(a.flatten(), b.flatten())[0, 1]
+            return corr
         elif self == SimilarityMetric.MUTUAL_INFORMATION:
             return lambda a, b: mutual_info_regression(np.array([a.flatten()]).transpose(), b.flatten(), discrete_features='auto')[0]
         elif self == SimilarityMetric.COSINE_SIMILARITY:
