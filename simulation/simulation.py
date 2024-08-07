@@ -6,6 +6,7 @@ from enum import Enum
 import numpy as np
 import random
 import time
+import os
 import math
 
 DEFAULT_PARAMETERS = {
@@ -280,8 +281,13 @@ if __name__ == '__main__':
     # print(f"Mean time taken for the simulation of 1200 hours (with treatment planning): {np.mean(time_planning)}")
     # print(f"Mean time taken for the simulation of 1200 hours (without treatment planning): {np.mean(time_not_planning)}")
 
-    make_gif(DEFAULT_PARAMETERS, 210, 5, 1, f"normal_oxygen_healthy_consumption.gif")
-    DEFAULT_PARAMETERS["average_healthy_oxygen_consumption"] = 12
-    make_gif(DEFAULT_PARAMETERS, 210, 5, 1, f"lower_oxygen_healthy_consumption.gif")
-    DEFAULT_PARAMETERS["average_healthy_oxygen_consumption"] = 30
-    make_gif(DEFAULT_PARAMETERS, 210, 5, 1, f"higher_oxygen_healthy_consumption.gif")
+    # make_gif(DEFAULT_PARAMETERS, 210, 5, 1, f"normal_oxygen_healthy_consumption.gif")
+    # DEFAULT_PARAMETERS["average_healthy_oxygen_consumption"] = 12
+    # make_gif(DEFAULT_PARAMETERS, 210, 5, 1, f"lower_oxygen_healthy_consumption.gif")
+    # DEFAULT_PARAMETERS["average_healthy_oxygen_consumption"] = 30
+    # make_gif(DEFAULT_PARAMETERS, 210, 5, 1, f"higher_oxygen_healthy_consumption.gif")
+
+
+    doses = np.load(os.path.join("datasets","best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "treatments.npy"))[0]
+    print(doses.shape)
+    make_gif(DEFAULT_PARAMETERS, 210,5,1,f"Normal_with_treatment.gif",treatment=doses)
