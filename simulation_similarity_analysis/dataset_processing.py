@@ -181,13 +181,13 @@ class DatasetProcessing:
 
 if __name__ == "__main__":
     datasets = [
-        DatasetProcessing("no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "no_dose_analysis"),
-        DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis"),
+        # DatasetProcessing("no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "no_dose_analysis"),
+        # DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis"),
         DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
     ]
 
     for dataset_processing in datasets:
-        dataset_processing.isomap_combined()
-        for t in TIMESTEPS:
-            for img_type in IMG_TYPES:
-                dataset_processing.isomap_per_matrix(t, img_type)
+        for t in [350, 550, 750]:
+            for img_type in [IMG_TYPES[1], IMG_TYPES[3]]:
+                for i in range(27):
+                    dataset_processing.similarity_between_matrix_per_difference(SimilarityMetric.IMAGE_ABSOLUTE_DIFFERENCE, t, img_type, "cell_cycle", i, 0, 12, 100000)
