@@ -16,7 +16,11 @@ class HyperparameterTuning:
         self.n_epoch = n_epoch
         self.task = task
         self.hyperparameters = hyperparameters
-        self.results = pd.DataFrame(columns=["Time", "Performance"] + list(self.hyperparameters.keys()))
+
+        if os.path.exists(os.path.join("results", self.tuning_name, "performances.csv")):
+            self.results = pd.read_csv(os.path.join("results", self.tuning_name, "performances.csv"))
+        else:
+            self.results = pd.DataFrame(columns=["Time", "Performance"] + list(self.hyperparameters.keys()))
 
     def execute_once(self, idx, params):
         config = {"DATASET": self.task, "MODEL": {}, "TRAINING": {}, "NAME": os.path.join(self.tuning_name, f"{idx}")}
@@ -46,8 +50,9 @@ class HyperparameterTuning:
         print(f"Search {idx} done")
         return perf
 
-    def random_search(self, iteration):
-        for i in range(iteration):
+    def random_search(self, iteration_end):
+        iteration_start = self.results.shape[0]
+        for i in range(iteration_start, iteration_end):
             random_param = {key: random.choice(self.hyperparameters[key]) for key in self.hyperparameters.keys()}
             self.execute_once(i, random_param)
 
@@ -104,4 +109,4 @@ if __name__ == '__main__':
     }
 
     my_tuning = HyperparameterTuning(f"hyp_search_{parser.data}_for_{parser.draw}_draws", my_task, my_hyperparameters, 300, 10, 0.001)
-    my_tuning.random_search(80)
+    my_tuning.random_search(40)
