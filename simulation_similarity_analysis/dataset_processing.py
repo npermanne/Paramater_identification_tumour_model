@@ -186,8 +186,19 @@ if __name__ == "__main__":
         DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
     ]
 
+    ranges = {
+        "cell_cycle": range(29),
+        "average_healthy_glucose_absorption": np.linspace(0.144, 0.576, 25),
+        "average_cancer_glucose_absorption": np.linspace(0.216, 0.864, 25),
+        "average_healthy_oxygen_consumption": range(25),
+        "average_cancer_oxygen_consumption": range(25)
+    }
+
     for dataset_processing in datasets:
-        for t in [350, 550, 750]:
-            for img_type in [IMG_TYPES[1], IMG_TYPES[3]]:
-                for i in range(27):
-                    dataset_processing.similarity_between_matrix_per_difference(SimilarityMetric.IMAGE_ABSOLUTE_DIFFERENCE, t, img_type, "cell_cycle", i, 0, 12, 100000)
+        for t in range(350, 1150, 100):
+            for img_type in IMG_TYPES:
+                metric = SimilarityMetric.JACCARD if img_type == "cells_types" else SimilarityMetric.INTERSECTION_HISTOGRAM
+                for param in parameters:
+                    tol = 0.002 if param == "average_healthy_glucose_absorption" else 0.003 if param == "average_cancer_glucose_absorption" else 0
+                    for diff in ranges[param]:
+                        dataset_processing.similarity_between_matrix_per_difference(metric, t, img_type, param, diff, tol, 12, 10000)
