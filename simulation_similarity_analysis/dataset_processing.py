@@ -181,9 +181,9 @@ class DatasetProcessing:
 
 if __name__ == "__main__":
     datasets = [
-        # DatasetProcessing("no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "no_dose_analysis"),
-        # DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis"),
-        DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
+        DatasetProcessing("no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "no_dose_analysis"),
+        DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis"),
+        # DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
     ]
 
     ranges = {
