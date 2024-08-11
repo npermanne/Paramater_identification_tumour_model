@@ -187,11 +187,11 @@ if __name__ == "__main__":
     ]
 
     ranges = {
-        "cell_cycle": range(29),
-        "average_healthy_glucose_absorption": np.linspace(0.144, 0.576, 25),
-        "average_cancer_glucose_absorption": np.linspace(0.216, 0.864, 25),
-        "average_healthy_oxygen_consumption": range(25),
-        "average_cancer_oxygen_consumption": range(25)
+        "cell_cycle": range(28),
+        "average_healthy_glucose_absorption": np.linspace(0.144, 0.576, 24)[:-8],
+        "average_cancer_glucose_absorption": np.linspace(0.216, 0.864, 24)[:-8],
+        "average_healthy_oxygen_consumption": range(24),
+        "average_cancer_oxygen_consumption": range(24)
     }
 
     for dataset_processing in datasets:
@@ -200,6 +200,6 @@ if __name__ == "__main__":
                 metric = SimilarityMetric.JACCARD if img_type == "cells_types" else SimilarityMetric.INTERSECTION_HISTOGRAM
                 for param in parameters:
                     print(f"Processing draw {t} for {img_type} and {param}")
-                    tol = 0.004 if param == "average_healthy_glucose_absorption" else 0.006 if param == "average_cancer_glucose_absorption" else 0
+                    tol = 0.002 if param == "average_healthy_glucose_absorption" else 0.003 if param == "average_cancer_glucose_absorption" else 0
                     for diff in ranges[param]:
                         dataset_processing.similarity_between_matrix_per_difference(metric, t, img_type, param, diff, tol, 12, 10000)
