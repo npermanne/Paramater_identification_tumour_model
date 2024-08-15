@@ -146,10 +146,7 @@ class DatasetProcessing:
         entropy_target = entropy(data_target)
         mutual_information = mutual_info_regression(data_matrices, data_target, discrete_features=(img_type == "cells_types")).reshape(n, n)
         normalized_mutual_information = mutual_information / entropy_target
-
-        print(normalized_mutual_information)
-
-        path = os.path.join(self.processed_data_folder, "mi", f"normalized_mi_{timestep}_{img_type}_{parameter}.npy")
+        path = os.path.join(self.processed_data_folder, "normalized_mi", f"normalized_mi_{timestep}_{img_type}_{parameter}.npy")
         np.save(path, normalized_mutual_information)
 
     def similarity_between_matrix_per_difference(self, metric: SimilarityMetric, timestep: int, img_type: str, parameter: str, difference: float, tol: float, process_number: int, iteration: int):
