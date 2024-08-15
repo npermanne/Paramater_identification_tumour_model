@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 from sklearn.feature_selection import mutual_info_regression
+from sklearn.metrics import adjusted_mutual_info_score
 from sklearn.manifold import Isomap
 from multiprocessing import Pool
 from sklearn.decomposition import PCA
@@ -26,6 +27,16 @@ def find_value_pairs(a: np.array, difference, tol):
     indices = np.argwhere(mask)
     indices = indices[indices[:, 0] <= indices[:, 1]]
     return a[indices]
+
+
+# Estimate the entropy of a variable
+def entropy(y):
+    # Compute histogram
+    hist, bin_edges = np.histogram(y, bins='auto', density=True)
+    # Compute the proba based on the histogram
+    proba = hist / np.sum(hist)
+    # Calculate the entropy
+    return -np.sum(proba * np.log(proba + np.finfo(float).eps))
 
 
 class DatasetProcessing:
@@ -127,6 +138,20 @@ class DatasetProcessing:
         path = os.path.join(self.processed_data_folder, "mi", f"mi_{timestep}_{img_type}_{parameter}.npy")
         np.save(path, mutual_information)
 
+    def normalized_mutual_information(self, timestep, img_type, parameter):
+        os.makedirs(os.path.join(self.processed_data_folder, "normalized_mi"), exist_ok=True)
+        data_matrices = [self.get_sample_matrix(i, timestep, img_type).flatten() for i in range(self.__len__())]
+        n = int(np.sqrt(len(data_matrices[0])))
+        data_target = np.array([self.get_sample_param(i)[parameter] for i in range(len(self))])
+        entropy_target = entropy(data_target)
+        mutual_information = mutual_info_regression(data_matrices, data_target, discrete_features=(img_type == "cells_types")).reshape(n, n)
+        normalized_mutual_information = mutual_information / entropy_target
+
+        print(normalized_mutual_information)
+
+        path = os.path.join(self.processed_data_folder, "mi", f"normalized_mi_{timestep}_{img_type}_{parameter}.npy")
+        np.save(path, normalized_mutual_information)
+
     def similarity_between_matrix_per_difference(self, metric: SimilarityMetric, timestep: int, img_type: str, parameter: str, difference: float, tol: float, process_number: int, iteration: int):
         possible_param_values = self.get_possible_param_values(parameter)
         pairs_different_param = find_value_pairs(possible_param_values, difference, tol)
@@ -182,24 +207,12 @@ class DatasetProcessing:
 if __name__ == "__main__":
     datasets = [
         DatasetProcessing("no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "no_dose_analysis"),
-        DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis"),
+        DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis")
         # DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
     ]
 
-    ranges = {
-        "cell_cycle": range(28),
-        "average_healthy_glucose_absorption": np.linspace(0.144, 0.576, 24)[:-8],
-        "average_cancer_glucose_absorption": np.linspace(0.216, 0.864, 24)[:-8],
-        "average_healthy_oxygen_consumption": range(24),
-        "average_cancer_oxygen_consumption": range(24)
-    }
-
-    for dataset_processing in datasets:
-        for t in range(350, 1150, 100):
-            for img_type in IMG_TYPES:
-                metric = SimilarityMetric.JACCARD if img_type == "cells_types" else SimilarityMetric.INTERSECTION_HISTOGRAM
-                for param in parameters:
-                    print(f"Processing draw {t} for {img_type} and {param}")
-                    tol = 0.002 if param == "average_healthy_glucose_absorption" else 0.003 if param == "average_cancer_glucose_absorption" else 0 if param == "cell_cycle" else 0.001
-                    for diff in ranges[param]:
-                        dataset_processing.similarity_between_matrix_per_difference(metric, t, img_type, param, diff, tol, 12, 10000)
+    for dataset in datasets:
+        for param in parameters:
+            for timestep in TIMESTEPS:
+                for img_type in IMG_TYPES:
+                    dataset.normalized_mutual_information(timestep, img_type, param)
