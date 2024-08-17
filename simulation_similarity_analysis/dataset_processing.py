@@ -203,7 +203,7 @@ class DatasetProcessing:
 
 if __name__ == "__main__":
     datasets = [
-        DatasetProcessing("no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "no_dose_analysis"),
+        #DatasetProcessing("no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "no_dose_analysis"),
         DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis"),
         DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
     ]
@@ -215,6 +215,7 @@ if __name__ == "__main__":
                 metric = SimilarityMetric.JACCARD if img_type == "cells_types" else SimilarityMetric.INTERSECTION_HISTOGRAM
                 param = "average_healthy_glucose_absorption"
                 for diff in np.linspace(0, 0.432, 25):
+                    print(diff)
                     dataset.similarity_between_matrix_per_difference(metric, timestep, img_type, param, diff, 0.002, 12, 10000)
 
                 param = "average_cancer_glucose_absorption"
