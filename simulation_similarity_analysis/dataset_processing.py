@@ -204,12 +204,19 @@ class DatasetProcessing:
 if __name__ == "__main__":
     datasets = [
         DatasetProcessing("no_dose_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "no_dose_analysis"),
-        DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis")
-        # DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
+        DatasetProcessing("baseline_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "baseline_dose_analysis"),
+        DatasetProcessing("best_model_treatment_dataset_start=350_interval=100_ndraw=8_size=(64,64)", "best_dose_analysis")
     ]
 
     for dataset in datasets:
-        for param in parameters:
-            for timestep in TIMESTEPS:
-                for img_type in IMG_TYPES:
-                    dataset.normalized_mutual_information(timestep, img_type, param)
+        for timestep in TIMESTEPS:
+            for img_type in IMG_TYPES:
+                print(f"{timestep} {img_type}")
+                metric = SimilarityMetric.JACCARD if img_type == "cells_types" else SimilarityMetric.INTERSECTION_HISTOGRAM
+                param = "average_healthy_glucose_absorption"
+                for diff in np.linspace(0, 0.432, 25):
+                    dataset.similarity_between_matrix_per_difference(metric, timestep, img_type, param, diff, 0.002, 12, 10000)
+
+                param = "average_cancer_glucose_absorption"
+                for diff in np.linspace(0, 0.648, 25):
+                    dataset.similarity_between_matrix_per_difference(metric, timestep, img_type, param, diff, 0.003, 12, 10000)
