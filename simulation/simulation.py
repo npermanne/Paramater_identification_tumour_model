@@ -227,7 +227,7 @@ def make_gif(parameter, iteration, step, interval, filename, treatment=None):
 
     glucose_plot = axis[1, 0].imshow(simu.get_glucose())
     axis[1, 0].set_title('Glucose')
-    axis[1, 0].axis('off')
+
     colorbar_glucose = plt.colorbar(glucose_plot, ax=axis[1, 0])
 
     oxygen_plot = axis[1, 1].imshow(simu.get_oxygen())
