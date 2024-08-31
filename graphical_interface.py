@@ -1,6 +1,5 @@
 import sys
 import os
-from email.policy import default
 
 sys.path.append("simulation")
 from tkinter import StringVar
@@ -17,6 +16,7 @@ import pickle
 import random
 import matplotlib
 import matplotlib.ticker as mticker
+from simulation_similarity_analysis.metrics import SimilarityMetric
 
 ctk.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
 ctk.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -24,7 +24,6 @@ ctk.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", 
 # COLOR
 DARK_BLUE = "#00539D"
 LIGHT_BLUE = "#4E91CD"
-
 
 # PARAM
 SIDEBAR_SIZE = 400
@@ -52,6 +51,20 @@ parameters = {
     "average_cancer_glucose_absorption": "Average cancer glucose absorption $\mu_{g,cancer}$",
     "average_healthy_oxygen_consumption": "Average healthy oxygen consumption $\mu_{o,healthy}$",
     "average_cancer_oxygen_consumption": "Average cancer oxygen consumption $\mu_{o,cancer}$"
+}
+
+name_img_type = {
+    "cells_types": "Cell type",
+    "cells_densities": "Cell density",
+    "oxygen": "Oxygen density",
+    "glucose": "Glucose density",
+}
+
+colors_img_type = {
+    "cells_types": "#00FA66ff",
+    "cells_densities": "#2B7589ff",
+    "oxygen": "#C94775ff",
+    "glucose": "#F6DC3Cff"
 }
 
 
@@ -96,9 +109,9 @@ class App(ctk.CTk):
 
         # TABVIEW VISUALISER
         self.tabview = ctk.CTkTabview(self, width=1470, height=900, segmented_button_selected_color=LIGHT_BLUE)
-        self.visualiser1 = Visualiser1(master=self.tabview.add("Visualiser 1"))
-        self.visualiser2 = Visualiser2(master=self.tabview.add("Visualiser 2"))
-        self.visualiser3 = Visualiser3(master=self.tabview.add("Visualiser 3"))
+        self.visualiser1 = Visualiser1(master=self.tabview.add("General performance"))
+        self.visualiser3 = Visualiser3(master=self.tabview.add("Similarity performance"))
+        self.visualiser2 = Visualiser2(master=self.tabview.add("Simulation difference"))
 
         self.tabview.place(relx=0.4, rely=0.5, anchor="center")
 
@@ -113,6 +126,13 @@ class App(ctk.CTk):
             path = os.path.join("results", f"hyp_search_{dataset_name}_for_{self.draws.get()}_draws", str(model_number))
             self.visualiser1.update_visualiser(path)
             self.visualiser2.update_visualiser(path, self.dataset.get())
+
+            dataset_name = {
+                "Without treatment": "no_dose_analysis",
+                "With baseline treatment": "baseline_dose_analysis",
+                "With RL treatment": "best_dose_analysis",
+            }[self.dataset.get()]
+            self.visualiser3.update_visualiser(path, dataset_name, self.draws.get())
 
 
 class Visualiser1(ctk.CTkFrame):
@@ -129,7 +149,9 @@ class Visualiser1(ctk.CTkFrame):
         df = pd.read_csv(os.path.join(path, "evaluation_data.csv"))
         data = {key: np.abs(np.array(df[f"predicted_{key}"]) - np.array(df[f"true_{key}"])) for key, value in parameters.items()}
 
-        ax.violinplot(data.values(), vert=False)
+        ax.violinplot(data.values(), vert=False, showmeans=True)
+        fig.suptitle("Performance of the model while predicting the different parameters")
+        ax.set_xlabel("Normalised absolute error of prediction of the model")
         ax.set_yticks(ticks=range(1, len(data) + 1), labels=[f(parameters[a]) for a in data.keys()])
 
         canvas = FigureCanvasTkAgg(fig, master=self.master)
@@ -292,9 +314,64 @@ class Visualiser2(ctk.CTkFrame):
             self.simulate()
 
 
+def get_evolution(img_type, param, draw, dataset):
+    df = pd.read_csv(os.path.join("simulation_similarity_analysis", dataset, "similarity_between_matrix", "scalar_similarity.csv"), index_col=0)
+    metric = SimilarityMetric.JACCARD if img_type == "cells_types" else SimilarityMetric.INTERSECTION_HISTOGRAM
+    data = df.loc[(df["Timestep"] == draw) & (df["Img_Type"] == img_type) & (df["Parameter"] == param) & (df["Metric"] == metric.__str__()), ["Difference", "Mean_Similarity_Measure", "Std_Similarity_Measure"]]
+    means = {diff: data.loc[data["Difference"] == diff, "Mean_Similarity_Measure"].iloc[0] for diff in data["Difference"].tolist()}
+    stds = {diff: data.loc[data["Difference"] == diff, "Std_Similarity_Measure"].iloc[0] for diff in data["Difference"].tolist()}
+
+    max = np.max(list(means.values()))
+    min = np.min(list(means.values()))
+    # argmax = [index for index in means.keys() if means[index] == max][0]
+    # argmin = [index for index in means.keys() if means[index] == min][0]
+    means_scaled = {key: (value - min) / (max - min) for key, value in means.items()}
+    stds_scaled = {key: value / (max - min) for key, value in stds.items()}
+    return means_scaled, stds_scaled
+
+
 class Visualiser3(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
+        self.master = master
+
+    def update_visualiser(self, path, dataset, draws):
+        f = lambda x: textwrap.fill(x, 20)
+        ranges = pd.read_csv(os.path.join("simulation", "parameter_data.csv"), index_col=0)
+        df = pd.read_csv(os.path.join(path, "evaluation_stats.csv"))
+        perf = {param: df.loc[df["Parameters"] == param, "Means"].iloc[0] for param in parameters.keys()}
+        for param in parameters.keys():
+            min = ranges.loc[param]['Minimum']
+            max = ranges.loc[param]['Maximum']
+            perf[param] *= (max - min)
+        fig, ax = plt.subplots(1, 1, figsize=(24, 15))
+        ax.clear()
+        barWidth = 0.2
+
+        # Code
+        for index, (img_type, color) in enumerate(colors_img_type.items()):
+            similarities = dict()
+            X = [x + index * barWidth for x in range(len(parameters))]
+            for param in parameters.keys():
+                similarities[param] = 0
+                for draw in range(350, (250 + 100 * draws) + 1, 100):
+                    mean, std = get_evolution(img_type, param, 250 + 100 * draws, dataset)
+                    key_as_array = np.asarray(list(mean.keys()))
+                    nearest_key = key_as_array[(np.abs(key_as_array - perf[param])).argmin()]
+                    similarities[param] += mean[0] - mean[nearest_key]
+                similarities[param] = similarities[param]/draws if similarities[param] > 0 else 0
+
+            plt.barh(X, list(similarities.values()), color=colors_img_type[img_type], height=barWidth * 0.8, label=name_img_type[img_type])
+
+        plt.yticks([r + (4 / 2 - 0.5) * barWidth for r in range(5)], [f(p) for p in parameters.values()])
+        plt.xlabel("Error between matrices")
+        fig.suptitle("Error between simulations matrices distinguished by prediction error")
+        plt.legend()
+        canvas = FigureCanvasTkAgg(fig, master=self.master)
+        canvas.draw()
+        canvas.get_tk_widget().config(highlightthickness=0, borderwidth=0)
+        canvas.get_tk_widget().place(relx=0.5, rely=0.5, relwidth=0.95, relheight=0.95, anchor="center")
+        plt.close()
 
 
 class Sidebar(ctk.CTkFrame):
